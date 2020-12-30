@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="@drawable/tv_border">
+
+        <TextView
+            android:id="@+id/tv_cardusername"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="人员姓名"
+            android:textAlignment="center"
+            android:background="@color/design_default_color_primary"
+            android:textColor="@color/white"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/tv_bankname"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="银行名称"
+            android:textAlignment="center"
+            android:background="@color/teal_200"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <ImageView
+            android:id="@+id/iv_iccardimage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:srcCompat="@mipmap/nouser" />
+    </LinearLayout>
+</android.support.constraint.ConstraintLayout>
