@@ -1,0 +1,12 @@
+{
+  "Code": 0,
+  "Msg": "",
+  "UpdateStatus": 1,
+  "VersionCode": 1,
+  "VersionName": "1.0",
+  "UploadTime": "2021-01-01 01:00:00",
+  "ModifyContent": "\r\n1、修复部分已知问题。\n2、优化了部分组件功能。\n3、新增更多使用演示。",
+  "DownloadUrl": "https://xuexiangjys.oss-cn-shanghai.aliyuncs.com/apk/xuidemo.apk",
+  "ApkSize": 12677,
+  "ApkMd5": "256DF928FED3835C5B2833234E494C07"
+}
