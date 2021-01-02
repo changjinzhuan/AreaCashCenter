@@ -16,6 +16,8 @@
 
 package cn.kcrxorg.areacashcenter.httputil;
 
+import androidx.annotation.NonNull;
+
 import com.xuexiang.xhttp2.XHttp;
 import com.xuexiang.xhttp2.XHttpSDK;
 import com.xuexiang.xhttp2.callback.DownloadProgressCallBack;
@@ -44,7 +46,7 @@ public class XHttpUpdateHttpService implements IUpdateHttpService {
     }
 
     @Override
-    public void asyncGet( String url,  Map<String, Object> params,  final IUpdateHttpService.Callback callBack) {
+    public void asyncGet(@NonNull String url, @NonNull Map<String, Object> params, @NonNull final Callback callBack) {
         XHttp.get(url)
                 .baseUrl(mBaseUrl)
                 .params(params)
@@ -63,7 +65,7 @@ public class XHttpUpdateHttpService implements IUpdateHttpService {
     }
 
     @Override
-    public void asyncPost( String url,  Map<String, Object> params,  final IUpdateHttpService.Callback callBack) {
+    public void asyncPost(@NonNull String url, @NonNull Map<String, Object> params, @NonNull final Callback callBack) {
         //这里默认post的是Form格式，使用json格式的请修改为 params -> upJson
         XHttp.post(url)
                 .baseUrl(mBaseUrl)
@@ -83,7 +85,7 @@ public class XHttpUpdateHttpService implements IUpdateHttpService {
     }
 
     @Override
-    public void download( String url,  String path,  String fileName,  final IUpdateHttpService.DownloadCallback callback) {
+    public void download(@NonNull String url, @NonNull String path, @NonNull String fileName, @NonNull final DownloadCallback callback) {
         Disposable disposable = XHttp.downLoad(url)
                 .savePath(path)
                 .saveName(fileName)
@@ -115,7 +117,7 @@ public class XHttpUpdateHttpService implements IUpdateHttpService {
     }
 
     @Override
-    public void cancelDownload( String url) {
+    public void cancelDownload(@NonNull String url) {
         ToastUtils.toast("已取消更新！");
         XHttpSDK.cancelRequest(url);
     }

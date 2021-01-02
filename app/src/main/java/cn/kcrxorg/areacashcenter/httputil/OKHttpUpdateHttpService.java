@@ -16,7 +16,7 @@
 
 package cn.kcrxorg.areacashcenter.httputil;
 
-
+import androidx.annotation.NonNull;
 
 import com.xuexiang.xupdate.proxy.IUpdateHttpService;
 import com.xuexiang.xupdate.utils.UpdateUtils;
@@ -53,7 +53,7 @@ public class OKHttpUpdateHttpService implements IUpdateHttpService {
 
 
     @Override
-    public void asyncGet( String url,  Map<String, Object> params, final  IUpdateHttpService.Callback callBack) {
+    public void asyncGet(@NonNull String url, @NonNull Map<String, Object> params, final @NonNull Callback callBack) {
         OkHttpUtils.get()
                 .url(url)
                 .params(transform(params))
@@ -72,7 +72,7 @@ public class OKHttpUpdateHttpService implements IUpdateHttpService {
     }
 
     @Override
-    public void asyncPost( String url,  Map<String, Object> params, final  IUpdateHttpService.Callback callBack) {
+    public void asyncPost(@NonNull String url, @NonNull Map<String, Object> params, final @NonNull Callback callBack) {
         //这里默认post的是Form格式，使用json格式的请修改 post -> postString
         RequestCall requestCall;
         if (mIsPostJson) {
@@ -102,7 +102,7 @@ public class OKHttpUpdateHttpService implements IUpdateHttpService {
     }
 
     @Override
-    public void download( String url,  String path,  String fileName, final  IUpdateHttpService.DownloadCallback callback) {
+    public void download(@NonNull String url, @NonNull String path, @NonNull String fileName, final @NonNull DownloadCallback callback) {
         OkHttpUtils.get()
                 .url(url)
                 .tag(url)
@@ -132,7 +132,7 @@ public class OKHttpUpdateHttpService implements IUpdateHttpService {
     }
 
     @Override
-    public void cancelDownload( String url) {
+    public void cancelDownload(@NonNull String url) {
         OkHttpUtils.getInstance().cancelTag(url);
     }
 
