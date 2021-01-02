@@ -43,8 +43,8 @@ import cn.kcrxorg.areacashcenter.mbutil.MyLog;
 import cn.kcrxorg.areacashcenter.mbutil.SoundManage;
 
 public class CashBoxConfirmActivity extends AppCompatActivity {
-    String url="http://192.168.3.33:8080/areaCashCenterTest/userQuery";
-    String cashboxconfirmurl="http://192.168.3.33:8080/areaCashCenterTest/cashBoxConfirm";
+    String url="http://172.66.1.2:8080/areaCashCenterTest/userQuery";
+    String cashboxconfirmurl="http://172.66.1.2:8080/areaCashCenterTest/cashBoxConfirm";
 
     public RFIDWithUHFUART mReader;
     MyLog myLog;
@@ -224,6 +224,7 @@ public class CashBoxConfirmActivity extends AppCompatActivity {
                                 {
                                     myLog.Write("获取到用户刷卡失败:不是携款员卡:"+userQueryMsg4.getUserName());
                                     myLog.Write("获取到用户刷卡失败:不是携款员卡:"+userQueryMsg4.getUserName());
+
                                     SoundManage.PlaySound(CashBoxConfirmActivity.this, SoundManage.SoundType.FAILURE);
                                     break;
                                 }
@@ -441,11 +442,7 @@ public class CashBoxConfirmActivity extends AppCompatActivity {
                    SoundManage.PlaySound(this, SoundManage.SoundType.FAILURE);
                    return;
                }
-//                CashBox cashBox=new CashBox();
-//                cashBox.setCashBoxCode(cardnum);
-//                cashBoxList.add(cashBox);
-//                cashBoxConfirm.setCashBoxList(cashBoxList);
-                //myLog.Write("data="+JSONObject.toJSONString(cashBoxConfirm));
+
                 cashBoxAdapter.notifyDataSetChanged();
                 lv_boxsconfirmcashboxs.setSelection(lv_boxsconfirmcashboxs.getBottom());
                 SoundManage.PlaySound(this, SoundManage.SoundType.SUCCESS);

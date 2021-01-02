@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProvider;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
@@ -34,8 +35,15 @@ public class LoginActivity extends AppCompatActivity {
 
     private LoginViewModel loginViewModel;
     private MyLog myLog;
+    String serverurl="http://172.66.1.2:8080/areaCashCenterTest/";
+    String url=serverurl+"userQuery";
 
-    String url="http://192.168.3.33:8080/areaCashCenterTest/userQuery";
+    private TextView tv_serverset;
+
+    //功率配置
+    private SharedPreferences mSharedPreferences;
+    private SharedPreferences.Editor mEditor;
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -45,6 +53,9 @@ public class LoginActivity extends AppCompatActivity {
         myLog=new MyLog(this,10000,1);
         myLog.Write("程序已启动...");
 
+        //初始化配置
+        //mSharedPreferences = getSharedPreferences("Area",MODE_PRIVATE);
+
         loginViewModel = new ViewModelProvider(this, new LoginViewModelFactory())
                 .get(LoginViewModel.class);
 
@@ -52,6 +63,16 @@ public class LoginActivity extends AppCompatActivity {
         final EditText passwordEditText = findViewById(R.id.password);
         final Button loginButton = findViewById(R.id.login);
         final ProgressBar loadingProgressBar = findViewById(R.id.loading);
+
+        tv_serverset=findViewById(R.id.tv_serverset);
+
+        tv_serverset.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+            }
+        });
+
 
         loginViewModel.getLoginFormState().observe(this, new Observer<LoginFormState>() {
             @Override
@@ -89,7 +110,6 @@ public class LoginActivity extends AppCompatActivity {
 
                     Intent mainintent=new Intent(LoginActivity.this, MainActivity.class);
 
-
                     startActivity(mainintent);
                     //Complete and destroy login activity once successful
                    // finish();
@@ -125,11 +145,10 @@ public class LoginActivity extends AppCompatActivity {
                 if (actionId == EditorInfo.IME_ACTION_DONE) {
 //                    loginViewModel.login(usernameEditText.getText().toString(),
 //                            passwordEditText.getText().toString());
-
                     loadingProgressBar.setVisibility(View.VISIBLE);
-
                     Thread t1 = new Thread(new Runnable() {
                         public void run() {
+
 
                             String admin=usernameEditText.getText().toString();
                             String pwd= passwordEditText.getText().toString();
@@ -152,11 +171,10 @@ public class LoginActivity extends AppCompatActivity {
         });
 
         loginButton.setOnClickListener(new View.OnClickListener() {
+
             @Override
             public void onClick(View v) {
-
                 loadingProgressBar.setVisibility(View.VISIBLE);
-
                 Thread t1 = new Thread(new Runnable() {
                     public void run() {
 

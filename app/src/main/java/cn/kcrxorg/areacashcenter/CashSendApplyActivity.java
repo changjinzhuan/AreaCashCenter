@@ -58,8 +58,8 @@ public class CashSendApplyActivity extends AppCompatActivity {
     TextView tv_cashmoney;
     Spinner sp_servicetype;
     ServiceTypeMsg serviceTypeMsg;
-    String serviceTypeurl="http://192.168.3.33:8080/areaCashCenterTest/serviceTypeRecord";
-    String cashSendApplyurl="http://192.168.3.33:8080/areaCashCenterTest/cashSendApply";
+    String serviceTypeurl="http://172.66.1.2:8080/areaCashCenterTest/serviceTypeRecord";
+    String cashSendApplyurl="http://172.66.1.2:8080/areaCashCenterTest/cashSendApply";
     List<String> serviceTypeList;
     ArrayAdapter<String> serviceTypearrayAdapter;
     Button btn_addcash;
@@ -79,6 +79,8 @@ public class CashSendApplyActivity extends AppCompatActivity {
 
     Button btn_scanbox;
     ListView lv_boxs;
+
+    String   datestr=new SimpleDateFormat("yyyy-MM-dd").format(new Date());
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -149,9 +151,11 @@ public class CashSendApplyActivity extends AppCompatActivity {
         cashViewList=new ArrayList<>();
         cashBoxList=new ArrayList<>();
         cashmoneyd=new BigDecimal(0);
-
+        datestr=new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+        cashSendApply.setDistributeTime(datestr);
         //日期选择
         tv_datepick=findViewById(R.id.tv_datepick);
+        tv_datepick.setText(datestr);
         tv_datepick.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -194,7 +198,7 @@ public class CashSendApplyActivity extends AppCompatActivity {
         });
 
         lv_cash=findViewById(R.id.lv_cash);
-        lv_cash.setNumColumns(4);
+        lv_cash.setNumColumns(3);
         cashAdapater=new CashAdapater(this,cashViewList);
         lv_cash.setAdapter(cashAdapater);
 
@@ -269,7 +273,24 @@ public class CashSendApplyActivity extends AppCompatActivity {
                 //选择完日期后弹出选择时间对话框
                 timeText.setText(time);
                 myLog.Write("配送日期:"+time);
-                cashSendApply.setDistributeTime(year+"-"+ (monthOfYear+1)+"-"+dayOfMonth);
+                String monthstr="";
+                String daystr="";
+                if((monthOfYear+1)<10)
+                {
+                    monthstr="0"+(monthOfYear+1);
+                }else
+                {
+                    monthstr=(monthOfYear+1)+"";
+                }
+                if(dayOfMonth<10)
+                {
+                    daystr="0"+dayOfMonth;
+                }else
+                {
+                    daystr=dayOfMonth+"";
+                }
+                datestr=year+"-"+monthstr+"-"+daystr;
+                cashSendApply.setDistributeTime(datestr);
 
             }
         }, year, month, day);
@@ -399,6 +420,7 @@ public class CashSendApplyActivity extends AppCompatActivity {
             cashSendApply.setCashBoxList(cashBoxList);
             SoundManage.PlaySound(this, SoundManage.SoundType.SUCCESS);
             cashBoxAdapter.notifyDataSetChanged();
+            lv_boxs.setSelection(lv_boxs.getBottom());
 
         } else {
             toastMessage("未扫描到款箱!");

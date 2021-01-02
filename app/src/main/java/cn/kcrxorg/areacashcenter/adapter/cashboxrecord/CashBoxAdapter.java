@@ -52,6 +52,7 @@ public class CashBoxAdapter extends BaseAdapter {
                 holder=new PackageViewHolder();
                 view= LayoutInflater.from(context).inflate(R.layout.item_cashbox,null);
                 holder.tv_cashboxcode=view.findViewById(R.id.tv_cashboxlist_cashboxcode);
+                holder.tv_cashboxid=view.findViewById(R.id.tv_cashboxid);
                 view.setTag(holder);
             }else
             {
@@ -63,8 +64,10 @@ public class CashBoxAdapter extends BaseAdapter {
             }
           //  Log.e("kcrx","cardnum="+cashBoxList.get(i).getCashBoxCode());
             holder.tv_cashboxcode.setText(cashBoxList.get(i).getCashBoxCode()+"");
-
-
+            holder.tv_cashboxid.setText("序号"+(i+1));
+            //滚到最下
+            ListView lv=(ListView) view.getParent();
+            lv.setSelection(lv.getBottom());
           //  view.setAnimation(AnimationUtils.makeInAnimation(context, false));
         }catch (Exception e)
         {
@@ -75,6 +78,7 @@ public class CashBoxAdapter extends BaseAdapter {
     }
 
     private class PackageViewHolder {
+        TextView tv_cashboxid;
        TextView tv_cashboxcode;
     }
 }

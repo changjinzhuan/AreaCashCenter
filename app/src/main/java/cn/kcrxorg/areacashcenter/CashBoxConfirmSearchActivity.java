@@ -19,8 +19,10 @@ import com.alibaba.fastjson.JSONObject;
 import com.rscja.deviceapi.RFIDWithUHFUART;
 import com.rscja.deviceapi.entity.UHFTAGInfo;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 import cn.kcrxorg.areacashcenter.data.cashBoxConfirmSearch.CashBoxConfirmSearchMsg;
@@ -35,7 +37,7 @@ import cn.kcrxorg.areacashcenter.mbutil.SoundManage;
 
 public class CashBoxConfirmSearchActivity extends AppCompatActivity {
 
-    String cashboxconfirmsearchurl="http://192.168.3.33:8080/areaCashCenterTest/cashBoxConfirmSearch";
+    String cashboxconfirmsearchurl="http://172.66.1.2:8080/areaCashCenterTest/cashBoxConfirmSearch";
     public RFIDWithUHFUART mReader;
     MyLog myLog;
     List<String> epclist;
@@ -91,7 +93,9 @@ public class CashBoxConfirmSearchActivity extends AppCompatActivity {
 
             }
         };
+        datestr=new SimpleDateFormat("yyyy-MM-dd").format(new Date());
         tv_cashboxconfirmsearch_datepick=findViewById(R.id.tv_cashboxconfirmsearch_datepick);
+        tv_cashboxconfirmsearch_datepick.setText(datestr);
         tv_cashboxconfirmsearch_datepick.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -126,7 +130,24 @@ public class CashBoxConfirmSearchActivity extends AppCompatActivity {
                 //选择完日期后弹出选择时间对话框
                 timeText.setText(time);
                 myLog.Write("选择的业务日期:"+time);
-                datestr=(year+"-"+ (monthOfYear+1)+"-"+dayOfMonth);
+                String monthstr="";
+                String daystr="";
+                if((monthOfYear+1)<10)
+                {
+                    monthstr="0"+(monthOfYear+1);
+                }else
+                {
+                    monthstr=(monthOfYear+1)+"";
+                }
+                if(dayOfMonth<10)
+                {
+                    daystr="0"+dayOfMonth;
+                }else
+                {
+                    daystr=dayOfMonth+"";
+                }
+                datestr=year+"-"+monthstr+"-"+daystr;
+
             }
         }, year, month, day);
         //弹出选择日期对话框

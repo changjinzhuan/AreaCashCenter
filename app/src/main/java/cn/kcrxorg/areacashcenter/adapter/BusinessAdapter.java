@@ -83,7 +83,7 @@ public class BusinessAdapter extends BaseAdapter {
             {
                 cn.kcrxorg.areacashcenter.adapter.cashboxrecord.CashAdapater  cashAdapater=new cn.kcrxorg.areacashcenter.adapter.cashboxrecord.CashAdapater(context,businessList.get(i).getCashList());
                 holder.lv_cashlist.setAdapter(cashAdapater);
-                holder.lv_cashlist.setNumColumns(4);
+                holder.lv_cashlist.setNumColumns(3);
                 setListViewHeightBasedOnChildren(holder.lv_cashlist);
               //  ViewGroup.LayoutParams cashListmaxheight = getGridHeight(cashAdapater, holder.lv_cashlist);
                 //holder.lv_cashlist.setLayoutParams(cashListmaxheight);

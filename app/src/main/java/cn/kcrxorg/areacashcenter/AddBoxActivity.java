@@ -47,8 +47,6 @@ public class AddBoxActivity extends AppCompatActivity {
         businesscount=getIntent().getIntExtra("businesscount",0);
         myLog.Write("获取到businesscount="+businesscount);
     }
-
-
     @Override
     protected void onDestroy() {
 

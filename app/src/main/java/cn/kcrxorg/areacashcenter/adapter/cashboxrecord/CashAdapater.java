@@ -10,6 +10,8 @@ import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import java.math.BigDecimal;
+import java.text.DecimalFormat;
 import java.util.List;
 
 import cn.kcrxorg.areacashcenter.R;
@@ -63,7 +65,7 @@ public class CashAdapater  extends BaseAdapter {
             holder.tv_cashvoucher.setText(cashList.get(i).getCashVoucherName());
             holder.tv_cashtype.setText(cashList.get(i).getCashTypeName());
             holder.tv_physicaltype.setText(cashList.get(i).getPhysicalTypeName());
-            holder.tv_cashMoney.setText(cashList.get(i).getCashMoney());
+            holder.tv_cashMoney.setText(formatTosepara(new BigDecimal(cashList.get(i).getCashMoney()))+"元");
 
             String cashname=cashList.get(i).getCashVoucherName();
             if(cashname.contains("100元券"))
@@ -102,5 +104,9 @@ public class CashAdapater  extends BaseAdapter {
         TextView tv_cashtype;
         TextView tv_physicaltype;
         TextView tv_cashMoney;
+    }
+    public static String formatTosepara(BigDecimal data) {
+        DecimalFormat df = new DecimalFormat("#,###.00");
+        return df.format(data.floatValue());
     }
 }

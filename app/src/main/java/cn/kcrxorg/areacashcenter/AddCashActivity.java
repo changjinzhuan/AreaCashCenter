@@ -51,8 +51,8 @@ public class AddCashActivity extends AppCompatActivity {
 
     MyLog myLog;
 
-    String cashtypeurl="http://192.168.3.33:8080/areaCashCenterTest/cashTypeRecord";
-    String cashvoucherurl="http://192.168.3.33:8080/areaCashCenterTest/cashVoucherRecord";
+    String cashtypeurl="http://172.66.1.2:8080/areaCashCenterTest/cashTypeRecord";
+    String cashvoucherurl="http://172.66.1.2:8080/areaCashCenterTest/cashVoucherRecord";
     Handler handler;
 
     BigDecimal cashmoney;

@@ -49,9 +49,9 @@ public class CashBoxRecordActivity extends AppCompatActivity {
     public RFIDWithUHFUART mReader;
     MyLog myLog;
     //cashBoxCode=0000000000000C1000229014&&cashBoxDate=2020-12-25
-    String cashboxcodeurl="http://192.168.3.33:8080/areaCashCenterTest/cashBoxRecord?";
+    String cashboxcodeurl="http://172.66.1.2:8080/areaCashCenterTest/cashBoxRecord?";
     //String testurl="cashBoxCode=0000000000000C1000229014&&cashBoxDate=2020-12-25";
-    String packrelatedurl="http://192.168.3.33:8080/areaCashCenterTest/packRelated";
+    String packrelatedurl="http://172.66.1.2:8080/areaCashCenterTest/packRelated";
     BusinessAdapter businessAdapter;
     CashBoxRecordMsg cashBoxRecordMsg;
 
@@ -239,8 +239,9 @@ public class CashBoxRecordActivity extends AppCompatActivity {
 
             }
         });
-
+        datestr=new SimpleDateFormat("yyyy-MM-dd").format(new Date());
         tv_cashboxrecord_datepick=findViewById(R.id.tv_cashboxrecord_datepick);
+        tv_cashboxrecord_datepick.setText(datestr);
         tv_cashboxrecord_datepick.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -285,7 +286,23 @@ public class CashBoxRecordActivity extends AppCompatActivity {
                 //选择完日期后弹出选择时间对话框
                 timeText.setText(time);
                 myLog.Write("选择的业务日期:"+time);
-                datestr=(year+"-"+ (monthOfYear+1)+"-"+dayOfMonth);
+                String monthstr="";
+                String daystr="";
+                if((monthOfYear+1)<10)
+                {
+                    monthstr="0"+(monthOfYear+1);
+                }else
+                {
+                    monthstr=(monthOfYear+1)+"";
+                }
+                if(dayOfMonth<10)
+                {
+                    daystr="0"+dayOfMonth;
+                }else
+                {
+                    daystr=dayOfMonth+"";
+                }
+                datestr=year+"-"+monthstr+"-"+daystr;
 
             }
         }, year, month, day);
