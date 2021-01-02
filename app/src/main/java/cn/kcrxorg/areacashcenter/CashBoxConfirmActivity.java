@@ -48,6 +48,7 @@ public class CashBoxConfirmActivity extends AppCompatActivity {
 
     public RFIDWithUHFUART mReader;
     MyLog myLog;
+    //2021commit
     List<String> epclist;
     Handler handler;
     GridView gv_carduser;
