@@ -14,6 +14,7 @@ import cn.kcrxorg.areacashcenter.mbutil.MyLog;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
+    //updatetest
    LinearLayout line_network;
    LinearLayout line_CashCenter;
 
