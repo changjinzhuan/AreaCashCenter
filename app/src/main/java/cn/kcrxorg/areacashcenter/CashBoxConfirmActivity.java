@@ -47,6 +47,7 @@ public class CashBoxConfirmActivity extends AppCompatActivity {
     String cashboxconfirmurl="http://172.66.1.2:8080/areaCashCenterTest/cashBoxConfirm";
 
     public RFIDWithUHFUART mReader;
+    //??
     MyLog myLog;
     //2021commit
     List<String> epclist;
