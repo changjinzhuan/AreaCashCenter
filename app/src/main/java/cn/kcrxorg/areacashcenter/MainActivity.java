@@ -1,18 +1,17 @@
 package cn.kcrxorg.areacashcenter;
 
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 
-import cn.kcrxorg.areacashcenter.data.cashBoxConfirm.CashBoxConfirm;
 import cn.kcrxorg.areacashcenter.data.model.msg.HttpLogin;
 import cn.kcrxorg.areacashcenter.mbutil.MyLog;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+
 
     //updatetest
    LinearLayout line_network;

@@ -1,14 +1,14 @@
 package cn.kcrxorg.areacashcenter.ui.login;
 
 import android.app.Activity;
-import android.arch.lifecycle.Observer;
-import android.arch.lifecycle.ViewModelProvider;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.annotation.StringRes;
-import android.support.v7.app.AppCompatActivity;
+import androidx.annotation.Nullable;
+import androidx.annotation.StringRes;
+import androidx.appcompat.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.KeyEvent;
@@ -20,16 +20,18 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.xuexiang.xupdate.XUpdate;
+import com.xuexiang.xupdate.entity.UpdateError;
+import com.xuexiang.xupdate.listener.OnUpdateFailureListener;
+import com.xuexiang.xupdate.utils.UpdateUtils;
+import com.xuexiang.xutil.tip.ToastUtils;
 
 import cn.kcrxorg.areacashcenter.MainActivity;
 import cn.kcrxorg.areacashcenter.R;
 import cn.kcrxorg.areacashcenter.data.model.msg.HttpLogin;
+import cn.kcrxorg.areacashcenter.httputil.OKHttpUpdateHttpService;
 import cn.kcrxorg.areacashcenter.mbutil.MyLog;
 import cn.kcrxorg.areacashcenter.mbutil.SoundManage;
-import cn.kcrxorg.areacashcenter.ui.login.LoginViewModel;
-import cn.kcrxorg.areacashcenter.ui.login.LoginViewModelFactory;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -37,7 +39,7 @@ public class LoginActivity extends AppCompatActivity {
     private MyLog myLog;
     String serverurl="http://172.66.1.2:8080/areaCashCenterTest/";
     String url=serverurl+"userQuery";
-
+    String updateurl="https://gitee.com/miao_po/AreaCashCenter/raw/master/update_api.json";
     private TextView tv_serverset;
 
     //功率配置
@@ -53,6 +55,7 @@ public class LoginActivity extends AppCompatActivity {
         myLog=new MyLog(this,10000,1);
         myLog.Write("程序已启动...");
 
+        initUpdate();
         //初始化配置
         //mSharedPreferences = getSharedPreferences("Area",MODE_PRIVATE);
 
@@ -69,7 +72,9 @@ public class LoginActivity extends AppCompatActivity {
         tv_serverset.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                XUpdate.newBuild(LoginActivity.this)
+                        .updateUrl(updateurl)
+                        .update();
             }
         });
 
@@ -205,5 +210,27 @@ public class LoginActivity extends AppCompatActivity {
 
     private void showLoginFailed(@StringRes Integer errorString) {
         Toast.makeText(getApplicationContext(), errorString, Toast.LENGTH_SHORT).show();
+    }
+
+    private void initUpdate()
+    {
+        XUpdate.get()
+                .debug(true)
+                .isWifiOnly(true)                                               //默认设置只在wifi下检查版本更新
+                .isGet(true)                                                    //默认设置使用get请求检查版本
+                .isAutoMode(false)                                              //默认设置非自动模式，可根据具体使用配置
+                .param("versionCode", UpdateUtils.getVersionCode(this))         //设置默认公共请求参数
+                .param("appKey", getPackageName())
+                .setOnUpdateFailureListener(new OnUpdateFailureListener() {     //设置版本更新出错的监听
+                    @Override
+                    public void onFailure(UpdateError error) {
+                        if (error.getCode() != UpdateError.ERROR.CHECK_NO_NEW_VERSION) {          //对不同错误进行处理
+                            ToastUtils.toast(error.toString());
+                        }
+                    }
+                })
+                .supportSilentInstall(true)                                     //设置是否支持静默安装，默认是true
+                .setIUpdateHttpService(new OKHttpUpdateHttpService())           //这个必须设置！实现网络请求功能。
+                .init(getApplication());
     }
 }
