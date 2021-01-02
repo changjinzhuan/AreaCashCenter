@@ -39,9 +39,9 @@ public class LoginActivity extends AppCompatActivity {
     private MyLog myLog;
     String serverurl="http://172.66.1.2:8080/areaCashCenterTest/";
     String url=serverurl+"userQuery";
-    String updateurl="https://gitee.com/xuexiangjys/XUpdate/raw/master/jsonapi/update_test.json";
+    String updateurl="https://gitee.com/miao_po/AreaCashCenter/raw/master/updateapi/update_api.json";
     //https://gitee.com/xuexiangjys/XUpdate/raw/master/jsonapi/update_test.json
-    //https://gitee.com/miao_po/AreaCashCenter/raw/master/update_api.json
+    //https://gitee.com/miao_po/AreaCashCenter/raw/master/updateapi/update_api.json
     private TextView tv_serverset;
 
     //功率配置
