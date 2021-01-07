@@ -9,12 +9,15 @@
     <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
+        android:name=".MyApp"
         android:allowBackup="true"
         android:icon="@mipmap/hm_logo"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/Theme.AreaCashCenter">
-        <activity android:name=".CashBoxPackSearchActivity"></activity>
+        <activity android:name=".CashBoxInventoryActivity"></activity>
+        <activity android:name=".SettingActivity" />
+        <activity android:name=".CashBoxPackSearchActivity" />
         <activity android:name=".CashBoxConfirmSearchActivity" />
         <activity android:name=".CashBoxConfirmActivity" />
         <activity android:name=".AddBoxActivity" />

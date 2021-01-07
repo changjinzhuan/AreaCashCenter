@@ -1,12 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity">
-
-
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -121,7 +119,50 @@
                 android:background="@drawable/btn_out"
                 android:textSize="30sp"
                 android:textStyle="bold"
-                android:layout_marginBottom="10dp"/>
+                android:layout_marginBottom="10dp" />
+
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp">
+
+                <Button
+                    android:id="@+id/btn_cashboxscanin"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="入库"
+                    android:textSize="30sp"
+                    android:background="@drawable/btn_in"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="10dp" />
+
+                <Button
+                    android:id="@+id/btn_cashboxscanout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="出库"
+
+                    android:textSize="30sp"
+                    android:background="@drawable/btn_out"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="10dp" />
+
+                <Button
+                    android:id="@+id/btn_cashboxinvertory"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="盘库"
+                    android:textSize="30sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="10dp"
+                    android:background="@drawable/btn_in" />
+
+            </LinearLayout>
+
         </LinearLayout>
 
         <Button
@@ -133,6 +174,7 @@
             android:textSize="30sp"
             android:textStyle="bold"
             android:layout_marginBottom="10dp"/>
+
 
         <!--Button
             android:id="@+id/btn_cashSendApply"
@@ -199,4 +241,4 @@
             android:textSize="30sp"
             android:textStyle="bold" /-->
     </LinearLayout>
-</android.support.constraint.ConstraintLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

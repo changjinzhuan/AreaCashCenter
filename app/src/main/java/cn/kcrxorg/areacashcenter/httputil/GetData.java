@@ -24,7 +24,11 @@ public class GetData {
 
         URL url = new URL(path);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setConnectTimeout(5000);
+        conn.setConnectTimeout(3000
+
+
+        );
+        conn.setReadTimeout(3000);
         conn.setRequestMethod("GET");
         if (conn.getResponseCode() != 200) {
             throw new RuntimeException("请求url失败");
@@ -32,7 +36,7 @@ public class GetData {
         InputStream inStream = conn.getInputStream();
         byte[] bt = StreamTool.read(inStream);
         inStream.close();
-        String rsstr=new String(bt,"UTF-8");
+        String rsstr = new String(bt, "UTF-8");
         return rsstr;
     }
     public void okHttpDoGet(String url)
@@ -64,6 +68,7 @@ public class GetData {
         URL url = new URL(path);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setConnectTimeout(5000);
+        conn.setReadTimeout(3000);
         conn.setRequestMethod("POST");
         //设置头部信息
         conn.setRequestProperty("headerdata", "ceshiyongde");
@@ -73,13 +78,13 @@ public class GetData {
         conn.setDoOutput(true);
         //httpURLConnection.setDoInput(true); 
         conn.setUseCaches(false);
-        conn.setConnectTimeout(30000); //30秒连接超时
-        conn.setReadTimeout(30000);    //30秒读取超时
+        conn.setConnectTimeout(3000); //30秒连接超时
+        conn.setReadTimeout(3000);    //30秒读取超时
         OutputStream outwritestream = conn.getOutputStream();
         outwritestream.write(data.getBytes());
         outwritestream.flush();
         outwritestream.close();
-     //   Log.d(ScanActivity.logTag, "doJsonPost: conn"+conn.getResponseCode());
+        //   Log.d(ScanActivity.logTag, "doJsonPost: conn"+conn.getResponseCode());
         if (conn.getResponseCode() != 200) {
             throw new RuntimeException("请求url失败");
         }

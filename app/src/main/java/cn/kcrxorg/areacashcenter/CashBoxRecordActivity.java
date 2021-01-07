@@ -6,9 +6,11 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v7.app.AppCompatActivity;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.View;
@@ -24,6 +26,8 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.rscja.deviceapi.RFIDWithUHFUART;
 import com.rscja.deviceapi.entity.UHFTAGInfo;
+import com.tencent.mmkv.MMKV;
+
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -34,24 +38,26 @@ import java.util.List;
 import cn.kcrxorg.areacashcenter.adapter.BusinessAdapter;
 import cn.kcrxorg.areacashcenter.data.cashBoxRecord.Business;
 import cn.kcrxorg.areacashcenter.data.cashBoxRecord.CashBoxRecordMsg;
+import cn.kcrxorg.areacashcenter.data.cashBoxRecord.User;
 import cn.kcrxorg.areacashcenter.data.model.CashBox;
 import cn.kcrxorg.areacashcenter.data.model.msg.BaseMsg;
-import cn.kcrxorg.areacashcenter.data.model.msg.CashVoucherMsg;
 import cn.kcrxorg.areacashcenter.data.model.msg.HttpLogin;
 import cn.kcrxorg.areacashcenter.data.packRelated.PackRelated;
 import cn.kcrxorg.areacashcenter.httputil.HttpTask;
 import cn.kcrxorg.areacashcenter.mbutil.EpcReader;
 import cn.kcrxorg.areacashcenter.mbutil.MyLog;
 import cn.kcrxorg.areacashcenter.mbutil.SoundManage;
+import cn.kcrxorg.areacashcenter.mbutil.XToastUtils;
+import cn.kcrxorg.areacashcenter.mview.MProgressDialogTool;
 
 public class CashBoxRecordActivity extends AppCompatActivity {
 
     public RFIDWithUHFUART mReader;
     MyLog myLog;
     //cashBoxCode=0000000000000C1000229014&&cashBoxDate=2020-12-25
-    String cashboxcodeurl="http://172.66.1.2:8080/areaCashCenterTest/cashBoxRecord?";
+    String cashboxcodeurl = MMKV.defaultMMKV().getString("serverurl", MyApp.DEFAULT_SERVER_URL) + "cashBoxRecord?";
     //String testurl="cashBoxCode=0000000000000C1000229014&&cashBoxDate=2020-12-25";
-    String packrelatedurl="http://172.66.1.2:8080/areaCashCenterTest/packRelated";
+    String packrelatedurl = MMKV.defaultMMKV().getString("serverurl", MyApp.DEFAULT_SERVER_URL) + "packRelated";
     BusinessAdapter businessAdapter;
     CashBoxRecordMsg cashBoxRecordMsg;
 
@@ -66,89 +72,105 @@ public class CashBoxRecordActivity extends AppCompatActivity {
 
     TextView tv_cashboxrecord_datepick;
 
-    String datestr="";
+    String datestr = "";
 
-    int serviceType=0;
+    int serviceType = 0;
+    int confirmType = 2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         supportRequestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_cash_box_record);
-        myLog=new MyLog(this,10000,1);
+        myLog = new MyLog(this, 10000, 1);
 
-        serviceType=getIntent().getIntExtra("serviceType",0);
-        myLog.Write("获取到业务类型为:"+serviceType);
-        epclist=new ArrayList<String>();
-        handler=new Handler()
-        {
+        serviceType = getIntent().getIntExtra("serviceType", 0);
+        confirmType = getIntent().getIntExtra("confirmType", 0);
+        myLog.Write("获取到业务类型为:" + serviceType);
+        epclist = new ArrayList<String>();
+        handler = new Handler() {
             @Override
             public void handleMessage(@NonNull Message msg) {
                 super.handleMessage(msg);
-                switch (msg.what)
-                {
+                switch (msg.what) {
                     case 200:
-                        String me=msg.getData().getString("httpRs");
-                        myLog.Write("获取到交取款明细消息:"+me);
-                        if(me.contains("error!"))
-                        {
-                            myLog.Write("获取交取款信息失败:"+me);
-                            toastMessage("获取交取款信息失败:"+me);
+                        String me = msg.getData().getString("httpRs");
+                        myLog.Write("获取到交取款明细消息:" + me);
+                        MProgressDialogTool.stop();
+                        if (me.contains("error!")) {
+                            myLog.Write("获取交取款信息失败:" + me);
+                            XToastUtils.error("获取交取款信息失败:" + me);
                             SoundManage.PlaySound(CashBoxRecordActivity.this, SoundManage.SoundType.FAILURE);
                             break;
                         }
 
-
-                        cashBoxRecordMsg= JSONObject.parseObject(me,CashBoxRecordMsg.class);
-                        if(cashBoxRecordMsg.getBusinessList().size()==0)
-                        {
-                            myLog.Write("该款包交取款明细为空"+me);
-                            toastMessage("该款包交取款明细为空:"+me);
+                        try {
+                            cashBoxRecordMsg = JSONObject.parseObject(me, CashBoxRecordMsg.class);
+                        } catch (Exception e) {
+                            myLog.Write("获取交取款信息失败" + e);
+                            XToastUtils.error("获取交取款信息失败" + e);
+                            SoundManage.PlaySound(CashBoxRecordActivity.this, SoundManage.SoundType.FAILURE);
+                            break;
+                        }
+                        if (cashBoxRecordMsg.getBusinessList().size() == 0) {
+                            myLog.Write("该款包交取款明细为空" + me);
+                            XToastUtils.error("该款包交取款明细为空:" + me);
                             SoundManage.PlaySound(CashBoxRecordActivity.this, SoundManage.SoundType.FAILURE);
                             break;
                         }
                         newbusinessList.clear();
-                        List<Business> thisBislist=cashBoxRecordMsg.getBusinessList();
-                        for(Business b:thisBislist)
-                         {
-                             if(b.getServiceTypeName().contains("缴款")&&serviceType==0)
-                             {
-                                 newbusinessList.add(b);
-                             }else if(b.getServiceTypeName().contains("取款")&&serviceType==1)
-                             {
-                                 newbusinessList.add(b);
-                             }
-                         }
-                        if(newbusinessList.size()==0)
-                        {
-                            myLog.Write("无该款包交取款明细"+me);
-                            toastMessage("无该款包交取款明细"+me);
+                        List<Business> thisBislist = cashBoxRecordMsg.getBusinessList();
+                        for (Business b : thisBislist) {
+                            if (b.getServiceTypeName().contains("缴款") && serviceType == 0) {
+                                newbusinessList.add(b);
+                            } else if (b.getServiceTypeName().contains("取款") && serviceType == 1) {
+                                newbusinessList.add(b);
+                            }
+                        }
+                        if (newbusinessList.size() == 0) {
+                            myLog.Write("无该款包交取款明细" + me);
+                            XToastUtils.error("无该款包交取款明细" + me);
                             SoundManage.PlaySound(CashBoxRecordActivity.this, SoundManage.SoundType.FAILURE);
                             break;
                         }
-                        myLog.Write("获取到交取款明细数量:"+ newbusinessList.size());
+                        if (confirmType == 0)//箱包库不显示照片
+                        {
+                            myLog.Write("这里是箱包库，清空人员照片不显示");
+                            for (Business b : newbusinessList) {
+                                b.setUserList(new ArrayList<User>());
+                            }
+                        }
+                        myLog.Write("获取到交取款明细数量:" + newbusinessList.size());
                         businessAdapter.notifyDataSetChanged();
+
                         break;
                     case 202:
-                        String rs=msg.getData().getString("httpRs");
-                        myLog.Write("获取到提交取款明细消息:"+rs);
-                        if(rs.contains("error!"))
-                        {
-                            myLog.Write("提交取款信息失败:"+rs);
-                            toastMessage("提交取款信息失败:"+rs);
+                        String rs = msg.getData().getString("httpRs");
+                        myLog.Write("获取到提交取款明细消息:" + rs);
+                        if (rs.contains("error!")) {
+                            myLog.Write("提交取款信息失败:" + rs);
+                            XToastUtils.error("提交取款信息失败:" + rs);
                             SoundManage.PlaySound(CashBoxRecordActivity.this, SoundManage.SoundType.FAILURE);
                             break;
                         }
-                        BaseMsg baseMsg=JSONObject.parseObject(rs,BaseMsg.class);
-                        if(baseMsg.getCode()==null||!baseMsg.getCode().equals("0"))
-                        {
-                            myLog.Write("提交取款信息失败:"+rs);
-                            toastMessage("提交取款信息失败:"+rs);
+                        BaseMsg baseMsg = null;
+                        try {
+                            baseMsg = JSONObject.parseObject(rs, BaseMsg.class);
+
+                        } catch (Exception e) {
+                            myLog.Write("提交取款信息失败:" + e);
+                            XToastUtils.error("提交取款信息失败:" + e);
+                            SoundManage.PlaySound(CashBoxRecordActivity.this, SoundManage.SoundType.FAILURE);
+                            break;
+                        }
+                        if (baseMsg.getCode() == null || !baseMsg.getCode().equals("0")) {
+                            myLog.Write("提交取款信息失败:" + rs);
+                            XToastUtils.error("提交取款信息失败:" + rs);
                             SoundManage.PlaySound(CashBoxRecordActivity.this, SoundManage.SoundType.FAILURE);
                             break;
                         }
                         SoundManage.PlaySound(CashBoxRecordActivity.this, SoundManage.SoundType.SUCCESS);
-                        toastMessage("提交取款信息成功！");
+                        XToastUtils.success("提交取款信息成功！");
                         btn_packrelated.setEnabled(false);
                         break;
 
@@ -163,39 +185,44 @@ public class CashBoxRecordActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
 
-                String ServiceTypeName=newbusinessList.get(i).getServiceTypeName();
-                myLog.Write("第"+i+"条业务信息选中,业务类型为:"+ServiceTypeName);
-                if(!ServiceTypeName.contains("取款"))
-                {
-                    myLog.Write(ServiceTypeName+"业务,不需要扫描绑定款箱...");
-                    toastMessage(ServiceTypeName+"业务,不需要扫描绑定款箱...");
+                String ServiceTypeName = newbusinessList.get(i).getServiceTypeName();
+                myLog.Write("第" + i + "条业务信息选中,业务类型为:" + ServiceTypeName);
+                if (!ServiceTypeName.contains("取款")) {
+                    myLog.Write(ServiceTypeName + "业务,不需要扫描绑定款箱...");
+                    XToastUtils.info(ServiceTypeName + "业务,不需要扫描绑定款箱...");
                     SoundManage.PlaySound(CashBoxRecordActivity.this, SoundManage.SoundType.FAILURE);
                     return;
                 }
-                Intent intent=new Intent(CashBoxRecordActivity.this,AddBoxActivity.class);
-                intent.putExtra("businesscount",i);
-                myLog.Write("businesscount="+i);
-                startActivityForResult(intent,1);
+                if (confirmType == 1) {
+                    myLog.Write("网点收款业务,不需要扫描绑定款箱...");
+                    return;
+                }
+                Intent intent = new Intent(CashBoxRecordActivity.this, AddBoxActivity.class);
+                intent.putExtra("businesscount", i);
+                myLog.Write("businesscount=" + i);
+                startActivityForResult(intent, 1);
             }
         });
         lv_cashboxrecord.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
-                if(newbusinessList.get(i).getCashBoxList().size()==0)
-                {
+                if (confirmType == 0) {
+                    myLog.Write("现在是箱包库确认,不支持该业务");
+                    return false;
+                }
+                if (newbusinessList.get(i).getCashBoxList().size() == 0) {
                     myLog.Write("该业务未绑定款箱，请绑定后交接...");
-                    toastMessage("该业务未绑定款箱，请绑定后交接...");
+                    XToastUtils.info("该业务未绑定款箱，请绑定后交接...");
                     SoundManage.PlaySound(CashBoxRecordActivity.this, SoundManage.SoundType.FAILURE);
                     return false;
                 }
-                Intent cashboxconfirmintent = new Intent(CashBoxRecordActivity.this,CashBoxConfirmActivity.class);
-                Bundle bundle=new Bundle();
+                Intent cashboxconfirmintent = new Intent(CashBoxRecordActivity.this, CashBoxConfirmActivity.class);
+                Bundle bundle = new Bundle();
                 ArrayList list = new ArrayList();
                 list.add(newbusinessList.get(i).getCashBoxList());
-                bundle.putParcelableArrayList("cashboxlist",list);
-                cashboxconfirmintent.putExtra("cashboxlist",bundle);
+                bundle.putParcelableArrayList("cashboxlist", list);
+                cashboxconfirmintent.putExtra("cashboxlist", bundle);
                 startActivity(cashboxconfirmintent);
-
                 finish();
                 return true;
             }
@@ -312,6 +339,7 @@ public class CashBoxRecordActivity extends AppCompatActivity {
     private void getCashVoucherMsg(String cashboxcode,String datestr) {
         myLog.Write("开始获取到交取款明细列表...");
         myLog.Write("url="+cashboxcodeurl+"cashBoxCode="+cashboxcode+"&&cashBoxDate="+datestr);
+
         HttpTask httpTask=new HttpTask(cashboxcodeurl+"cashBoxCode="+cashboxcode+"&&cashBoxDate="+datestr,handler,200);
         httpTask.execute();
     }
@@ -345,8 +373,8 @@ public class CashBoxRecordActivity extends AppCompatActivity {
         try {
             mReader = RFIDWithUHFUART.getInstance();
         } catch (Exception ex) {
-            myLog.Write(this.getClass()+"启动失败:"+ex.getMessage());
-            toastMessage(ex.getMessage());
+            myLog.Write(this.getClass() + "启动失败:" + ex.getMessage());
+            XToastUtils.error("启动失败:" + ex.getMessage());
             return;
         }
 
@@ -412,46 +440,44 @@ public class CashBoxRecordActivity extends AppCompatActivity {
     List<String> epclist;
     private void readTag()
     {
-        mReader.setPower(10);
+        mReader.setPower(MMKV.defaultMMKV().getInt("scanpower", 10));
         UHFTAGInfo strUII = mReader.inventorySingleTag();
         if (strUII!=null) {
             String strEPC = strUII.getEPC();
 
-            String cardnum= EpcReader.getEpc(strEPC);
-            if(cardnum==null||cardnum.equals(""))
-            {
-                myLog.Write("扫描到款箱号:"+strEPC+"非法！");
-                toastMessage("扫描到款箱号:"+strEPC+"非法！");
+            String cardnum = EpcReader.getEpc(strEPC);
+            if (cardnum == null || cardnum.equals("")) {
+                myLog.Write("扫描到款箱号:" + strEPC + "非法！");
+                XToastUtils.error("扫描到款箱号:" + strEPC + "非法！");
                 SoundManage.PlaySound(this, SoundManage.SoundType.FAILURE);
                 return;
             }
-            if(!cardnum.startsWith("W")&&!cardnum.startsWith("K"))
-            {
-                myLog.Write("扫描到款箱号:"+strEPC+"非法！");
-                toastMessage("扫描到款箱号:"+strEPC+"非法！");
+            if (!cardnum.startsWith("W") && !cardnum.startsWith("K")) {
+                myLog.Write("扫描到款箱号:" + strEPC + "非法！");
+                XToastUtils.error("扫描到款箱号:" + strEPC + "非法！");
                 SoundManage.PlaySound(this, SoundManage.SoundType.FAILURE);
                 return;
             }
-            cardnum= cardnum.substring(0,5);
-            if(checkRepeat(cardnum)==false)
-            {
-                myLog.Write("扫描到款箱号:"+strEPC+"重复过滤");
+            cardnum = cardnum.substring(0, 5);
+            if (checkRepeat(cardnum) == false) {
+                myLog.Write("扫描到款箱号:" + strEPC + "重复过滤");
+                XToastUtils.error("扫描到款箱号:" + strEPC + "重复！");
                 SoundManage.PlaySound(this, SoundManage.SoundType.FAILURE);
                 return;
             }
-            if(datestr.equals("")||datestr==null)
-            {
+            if (datestr.equals("") || datestr == null) {
                 myLog.Write("请选择业务日期!");
-                toastMessage("请选择业务日期!");
+                XToastUtils.info("请选择业务日期!");
                 SoundManage.PlaySound(this, SoundManage.SoundType.FAILURE);
                 return;
             }
             epclist.add(cardnum);
-            getCashVoucherMsg(cardnum,datestr);
+            MProgressDialogTool.init(CashBoxRecordActivity.this, "数据加载中...");
+            getCashVoucherMsg(cardnum, datestr);
             SoundManage.PlaySound(this, SoundManage.SoundType.SUCCESS);
 
         } else {
-            toastMessage("未扫描到款箱!");
+            XToastUtils.info("未扫描到款箱!");
             SoundManage.PlaySound(this, SoundManage.SoundType.FAILURE);
         }
     }

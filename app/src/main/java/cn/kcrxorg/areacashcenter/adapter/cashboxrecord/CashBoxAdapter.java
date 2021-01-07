@@ -47,28 +47,28 @@ public class CashBoxAdapter extends BaseAdapter {
         try
         {
             PackageViewHolder holder;
-            if(view==null)
-            {
-                holder=new PackageViewHolder();
-                view= LayoutInflater.from(context).inflate(R.layout.item_cashbox,null);
-                holder.tv_cashboxcode=view.findViewById(R.id.tv_cashboxlist_cashboxcode);
-                holder.tv_cashboxid=view.findViewById(R.id.tv_cashboxid);
+            if (view == null) {
+                holder = new PackageViewHolder();
+                view = LayoutInflater.from(context).inflate(R.layout.item_cashbox, null);
+                holder.tv_cashboxcode = view.findViewById(R.id.tv_cashboxlist_cashboxcode);
+                holder.tv_cashboxid = view.findViewById(R.id.tv_cashboxid);
                 view.setTag(holder);
-            }else
-            {
+            } else {
                 holder = (PackageViewHolder) view.getTag();
             }
-            if(cashBoxList.get(i).getColor().equals("green"))
-            {
-                holder.tv_cashboxcode.setBackgroundResource(R.color.cash50);
+            if (cashBoxList.get(i).getColor().equals("green")) {
+                //     Log.e("kcrxtest","设置第"+i+"条为绿色箱号:"+cashBoxList.get(i).getCashBoxCode());
+                view.setBackgroundResource(R.color.xui_btn_green_normal_color);
+            } else {
+                view.setBackgroundResource(R.color.white);
             }
-          //  Log.e("kcrx","cardnum="+cashBoxList.get(i).getCashBoxCode());
-            holder.tv_cashboxcode.setText(cashBoxList.get(i).getCashBoxCode()+"");
-            holder.tv_cashboxid.setText("序号"+(i+1));
-            //滚到最下
-            ListView lv=(ListView) view.getParent();
-            lv.setSelection(lv.getBottom());
-          //  view.setAnimation(AnimationUtils.makeInAnimation(context, false));
+            //  Log.e("kcrx","cardnum="+cashBoxList.get(i).getCashBoxCode());
+            holder.tv_cashboxcode.setText(cashBoxList.get(i).getCashBoxCode() + "");
+            holder.tv_cashboxid.setText("序号" + (i + 1));
+//            //滚到最下
+//            ListView lv=(ListView) view.getParent();
+//            lv.setSelection(lv.getBottom());
+            //  view.setAnimation(AnimationUtils.makeInAnimation(context, false));
         }catch (Exception e)
         {
             Log.e("kcrx","cashboxadapter exception="+e.getMessage());

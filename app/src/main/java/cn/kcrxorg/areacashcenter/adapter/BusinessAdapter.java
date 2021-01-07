@@ -1,6 +1,8 @@
 package cn.kcrxorg.areacashcenter.adapter;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,6 +12,8 @@ import android.widget.Adapter;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 
@@ -22,6 +26,7 @@ import java.util.List;
 import cn.kcrxorg.areacashcenter.R;
 import cn.kcrxorg.areacashcenter.adapter.cashboxrecord.CashBoxAdapter;
 import cn.kcrxorg.areacashcenter.data.cashBoxRecord.Business;
+import cn.kcrxorg.areacashcenter.mbutil.BitmapUtils;
 
 public class BusinessAdapter extends BaseAdapter {
 
@@ -54,22 +59,28 @@ public class BusinessAdapter extends BaseAdapter {
 
         try{
             PackageViewHolder holder;
-            if(view==null)
-            {
+            if (view == null) {
                 holder = new PackageViewHolder();
-                view= LayoutInflater.from(context).inflate(R.layout.item_business,null);
-                holder.tv_bankName=view.findViewById(R.id.tv_bankName);
-                holder.tv_servicetypename=view.findViewById(R.id.tv_servicetypename);
-                holder.tv_linename=view.findViewById(R.id.tv_linename);
-                holder.tv_updatetime=view.findViewById(R.id.tv_updatetime);
-                holder.tv_distributetime=view.findViewById(R.id.tv_distributetime);
-                holder.tv_totalmoeny=view.findViewById(R.id.tv_totalmoeny);
-                holder.lv_cashlist=view.findViewById(R.id.lv_cashlist);
-                holder.lv_zkList=view.findViewById(R.id.lv_zkList);
-                holder.lv_cashboxes=view.findViewById(R.id.lv_cashboxes);
+                view = LayoutInflater.from(context).inflate(R.layout.item_business, null);
+                holder.tv_bankName = view.findViewById(R.id.tv_bankName);
+                holder.tv_servicetypename = view.findViewById(R.id.tv_servicetypename);
+                holder.tv_linename = view.findViewById(R.id.tv_linename);
+                holder.tv_updatetime = view.findViewById(R.id.tv_updatetime);
+                holder.tv_distributetime = view.findViewById(R.id.tv_distributetime);
+                holder.tv_totalmoeny = view.findViewById(R.id.tv_totalmoeny);
+                holder.lv_cashlist = view.findViewById(R.id.lv_cashlist);
+                holder.lv_zkList = view.findViewById(R.id.lv_zkList);
+                holder.lv_cashboxes = view.findViewById(R.id.lv_cashboxes);
+                holder.tv_carduser1name = view.findViewById(R.id.tv_carduser1name);
+                holder.tv_carduser2name = view.findViewById(R.id.tv_carduser2name);
+                holder.iv_carduser1image = view.findViewById(R.id.iv_carduser1image);
+                holder.iv_carduser2image = view.findViewById(R.id.iv_carduser2image);
+
+                holder.line_yayunimage = view.findViewById(R.id.line_yayunimage);
+                holder.line_yayunname = view.findViewById(R.id.line_yayunname);
+                holder.tv_yayuntotal = view.findViewById(R.id.tv_yayuntotal);
                 view.setTag(holder);
-            }else
-            {
+            } else {
                 holder = (PackageViewHolder) view.getTag();
             }
             holder.tv_bankName.setText(businessList.get(i).getBankName());
@@ -77,34 +88,46 @@ public class BusinessAdapter extends BaseAdapter {
             holder.tv_linename.setText(businessList.get(i).getLineName());
             holder.tv_updatetime.setText(businessList.get(i).getUpDateTime());
             holder.tv_distributetime.setText(businessList.get(i).getDistributeTime());
-            holder.tv_totalmoeny.setText(formatTosepara(new BigDecimal(businessList.get(i).getTotalMoney()))+"元");
-          //  Log.e("kcrx","当前gridviewid="+i);
-            if(businessList.get(i).getCashList()!=null)
-            {
-                cn.kcrxorg.areacashcenter.adapter.cashboxrecord.CashAdapater  cashAdapater=new cn.kcrxorg.areacashcenter.adapter.cashboxrecord.CashAdapater(context,businessList.get(i).getCashList());
+            holder.tv_totalmoeny.setText(formatTosepara(new BigDecimal(businessList.get(i).getTotalMoney())) + "元");
+            //  Log.e("kcrx","当前gridviewid="+i);
+            if (businessList.get(i).getCashList() != null) {
+                cn.kcrxorg.areacashcenter.adapter.cashboxrecord.CashAdapater cashAdapater = new cn.kcrxorg.areacashcenter.adapter.cashboxrecord.CashAdapater(context, businessList.get(i).getCashList());
                 holder.lv_cashlist.setAdapter(cashAdapater);
                 holder.lv_cashlist.setNumColumns(3);
                 setListViewHeightBasedOnChildren(holder.lv_cashlist);
-              //  ViewGroup.LayoutParams cashListmaxheight = getGridHeight(cashAdapater, holder.lv_cashlist);
+                //  ViewGroup.LayoutParams cashListmaxheight = getGridHeight(cashAdapater, holder.lv_cashlist);
                 //holder.lv_cashlist.setLayoutParams(cashListmaxheight);
             }
-          //  Log.e("Kcrx","CashBoxList="+businessList.get(i).getCashBoxList().size());
-            if(businessList.get(i).getCashBoxList()!=null)
-            {
-                CashBoxAdapter cashBoxAdapter=new CashBoxAdapter(context,businessList.get(i).getCashBoxList());
+            //  Log.e("Kcrx","CashBoxList="+businessList.get(i).getCashBoxList().size());
+            if (businessList.get(i).getCashBoxList() != null) {
+                CashBoxAdapter cashBoxAdapter = new CashBoxAdapter(context, businessList.get(i).getCashBoxList());
                 holder.lv_cashboxes.setAdapter(cashBoxAdapter);
                 ViewGroup.LayoutParams cashboxlistmaxheight = getListHeight(cashBoxAdapter, holder.lv_cashboxes);
                 holder.lv_cashboxes.setLayoutParams(cashboxlistmaxheight);
             }
-
+            if (businessList.get(i).getUserList() != null) {
+                if (businessList.get(i).getUserList().size() >= 2) {
+                    holder.tv_carduser1name.setText(businessList.get(i).getUserList().get(0).getUserName());
+                    holder.tv_carduser2name.setText(businessList.get(i).getUserList().get(1).getUserName());
+                    holder.iv_carduser1image.setImageBitmap(getBitmap(businessList.get(i).getUserList().get(0).getIdImage()));
+                    holder.iv_carduser2image.setImageBitmap(getBitmap(businessList.get(i).getUserList().get(1).getIdImage()));
+                } else {
+                    holder.tv_yayuntotal.setVisibility(View.GONE);
+                    holder.line_yayunname.setVisibility(View.GONE);
+                    holder.line_yayunimage.setVisibility(View.GONE);
+                }
+            }
             view.setAnimation(AnimationUtils.makeInAnimation(context, false));
-        }catch (Exception e)
-        {
-            Log.e("kcrx",e.getMessage());
+        } catch (Exception e) {
+            Log.e("kcrx", e.getMessage());
         }
-
-
         return view;
+    }
+
+    private Bitmap getBitmap(String base64str) {
+        byte[] decodedString = Base64.decode(base64str, Base64.DEFAULT);
+        Bitmap bitmap = BitmapUtils.decodeSampledBitmapFromBitmap(decodedString, 300, 400);
+        return bitmap;
     }
 
     private class PackageViewHolder {
@@ -117,6 +140,14 @@ public class BusinessAdapter extends BaseAdapter {
         GridView lv_cashlist;
         ListView lv_zkList;
         ListView lv_cashboxes;
+        TextView tv_carduser1name;
+        TextView tv_carduser2name;
+        ImageView iv_carduser1image;
+        ImageView iv_carduser2image;
+
+        LinearLayout line_yayunname;
+        LinearLayout line_yayunimage;
+        TextView tv_yayuntotal;
     }
     public static String formatTosepara(BigDecimal data) {
         DecimalFormat df = new DecimalFormat("#,###.00");

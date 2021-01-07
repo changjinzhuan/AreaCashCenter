@@ -5,8 +5,10 @@ import android.app.ProgressDialog;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
-import android.support.annotation.NonNull;
-import android.support.v7.app.AppCompatActivity;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.View;
@@ -20,6 +22,7 @@ import android.widget.Toast;
 import com.alibaba.fastjson.JSONObject;
 import com.rscja.deviceapi.RFIDWithUHFUART;
 import com.rscja.deviceapi.entity.UHFTAGInfo;
+import com.tencent.mmkv.MMKV;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -39,12 +42,13 @@ import cn.kcrxorg.areacashcenter.httputil.HttpTask;
 import cn.kcrxorg.areacashcenter.mbutil.EpcReader;
 import cn.kcrxorg.areacashcenter.mbutil.MyLog;
 import cn.kcrxorg.areacashcenter.mbutil.SoundManage;
+import cn.kcrxorg.areacashcenter.mbutil.XToastUtils;
 
 public class CashBoxPackSearchActivity extends AppCompatActivity {
 
-    String url="http://172.66.1.2:8080/areaCashCenterTest/userQuery";
-    String cashBoxPackSearchurl="http://172.66.1.2:8080/areaCashCenterTest/cashBoxPackSearch";
-    String cashBoxPackConfirmurl="http://172.66.1.2:8080/areaCashCenterTest/cashBoxPackConfirm";
+    String url = MMKV.defaultMMKV().getString("serverurl", MyApp.DEFAULT_SERVER_URL) + "userQuery";
+    String cashBoxPackSearchurl = MMKV.defaultMMKV().getString("serverurl", MyApp.DEFAULT_SERVER_URL) + "cashBoxPackSearch";
+    String cashBoxPackConfirmurl = MMKV.defaultMMKV().getString("serverurl", MyApp.DEFAULT_SERVER_URL) + "cashBoxPackConfirm";
     public RFIDWithUHFUART mReader;
     MyLog myLog;
     List<String> epclist;
@@ -72,15 +76,16 @@ public class CashBoxPackSearchActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cash_box_pack_search);
-        myLog=new MyLog(this,10000,1);
+        myLog = new MyLog(this, 10000, 1);
 
-        serviceType=getIntent().getIntExtra("serviceType",0);
-        myLog.Write("获取到业务类型为:"+serviceType);
-        cashBoxPackConfirm=new CashBoxPackConfirm();
+        serviceType = getIntent().getIntExtra("serviceType", 0);
+        myLog.Write("获取到业务类型为:" + serviceType);
+        cashBoxPackConfirm = new CashBoxPackConfirm();
         cashBoxPackConfirm.setReceiveConfirm("1");
 
-        datestr=new SimpleDateFormat("yyyy-MM-dd").format(new Date());
-        tv_cashboxrecord_datepick=findViewById(R.id.tv_cashboxpacksearch_datepick);
+        datestr = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+        cashBoxPackConfirm.setDistributeTime(datestr);
+        tv_cashboxrecord_datepick = findViewById(R.id.tv_cashboxpacksearch_datepick);
         tv_cashboxrecord_datepick.setText(datestr);
         tv_cashboxrecord_datepick.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -90,8 +95,8 @@ public class CashBoxPackSearchActivity extends AppCompatActivity {
             }
         });
 
-        userQueryMsgs=new UserQueryMsg[4];
-        gv_carduser=findViewById(R.id.gv_carduser);
+        userQueryMsgs = new UserQueryMsg[4];
+        gv_carduser = findViewById(R.id.gv_carduser);
         CardUserAdapter cardUserAdapter=new CardUserAdapter(this,userQueryMsgs);
         gv_carduser.setAdapter(cardUserAdapter);
 
@@ -110,11 +115,10 @@ public class CashBoxPackSearchActivity extends AppCompatActivity {
                 {
                     case 200://刷卡消息
                         String me=msg.getData().getString("httpRs");
-                        myLog.Write("获取到用户刷卡消息:"+me);
-                        if(me.contains("error"))
-                        {
-                            myLog.Write("获取到用户刷卡失败!"+me);
-                            toastMessage("获取到用户刷卡失败!"+me);
+                        myLog.Write("获取到用户刷卡消息");
+                        if(me.contains("error")) {
+                            myLog.Write("获取到用户刷卡失败!" + me);
+                            XToastUtils.error("获取到用户刷卡失败!" + me);
                             SoundManage.PlaySound(CashBoxPackSearchActivity.this, SoundManage.SoundType.FAILURE);
                             break;
                         }
@@ -122,17 +126,9 @@ public class CashBoxPackSearchActivity extends AppCompatActivity {
                         {
                             case 0:
                                 UserQueryMsg userQueryMsg= JSONObject.parseObject(me,UserQueryMsg.class);
-                                if(!userQueryMsg.getCode().equals("0"))
-                                {
-                                    myLog.Write("获取到用户刷卡失败!"+userQueryMsg.getMsg());
-                                    toastMessage("获取到用户刷卡失败!"+userQueryMsg.getMsg());
-                                    SoundManage.PlaySound(CashBoxPackSearchActivity.this, SoundManage.SoundType.FAILURE);
-                                    break;
-                                }
-                                if(!userQueryMsg.getRoleID().equals("6"))
-                                {
-                                    myLog.Write("获取到用户刷卡失败:请押运员刷卡");
-                                    toastMessage("获取到用户刷卡失败:请押运员刷卡");
+                                if(!userQueryMsg.getCode().equals("0")) {
+                                    myLog.Write("获取到用户刷卡失败!" + userQueryMsg.getMsg());
+                                    XToastUtils.error("获取到用户刷卡失败!" + userQueryMsg.getMsg());
                                     SoundManage.PlaySound(CashBoxPackSearchActivity.this, SoundManage.SoundType.FAILURE);
                                     break;
                                 }
@@ -143,27 +139,18 @@ public class CashBoxPackSearchActivity extends AppCompatActivity {
                                     cashBoxPackConfirm.setIcCard1(userQueryMsg.getUserID());
                                     SoundManage.PlaySound(CashBoxPackSearchActivity.this, SoundManage.SoundType.SUCCESS);
                                     nowstate=1;
-                                }catch (Exception e)
-                                {
-                                    myLog.Write("获取到用户刷卡失败!"+e.getMessage());
-                                    toastMessage("获取到用户刷卡失败!"+e.getMessage());
+                                }catch (Exception e) {
+                                    myLog.Write("获取到用户刷卡失败!" + e.getMessage());
+                                    XToastUtils.error("获取到用户刷卡失败!" + e.getMessage());
                                     SoundManage.PlaySound(CashBoxPackSearchActivity.this, SoundManage.SoundType.FAILURE);
                                     break;
                                 }
                                 break;
                             case 1:
                                 UserQueryMsg userQueryMsg2=JSONObject.parseObject(me,UserQueryMsg.class);
-                                if(!userQueryMsg2.getCode().equals("0"))
-                                {
-                                    myLog.Write("获取到用户刷卡失败!"+userQueryMsg2.getMsg());
-                                    toastMessage("获取到用户刷卡失败!"+userQueryMsg2.getMsg());
-                                    SoundManage.PlaySound(CashBoxPackSearchActivity.this, SoundManage.SoundType.FAILURE);
-                                    break;
-                                }
-                                if(!userQueryMsg2.getRoleID().equals("6"))
-                                {
-                                    myLog.Write("获取到用户刷卡失败:请押运员刷卡");
-                                    toastMessage("获取到用户刷卡失败:请押运员刷卡");
+                                if(!userQueryMsg2.getCode().equals("0")) {
+                                    myLog.Write("获取到用户刷卡失败!" + userQueryMsg2.getMsg());
+                                    XToastUtils.error("获取到用户刷卡失败!" + userQueryMsg2.getMsg());
                                     SoundManage.PlaySound(CashBoxPackSearchActivity.this, SoundManage.SoundType.FAILURE);
                                     break;
                                 }
@@ -172,7 +159,7 @@ public class CashBoxPackSearchActivity extends AppCompatActivity {
                                     if(datestr.equals(""))
                                     {
                                         myLog.Write("请选择配送日期!");
-                                        toastMessage("请选择配送日期!");
+                                        XToastUtils.info("请选择配送日期!");
                                         SoundManage.PlaySound(CashBoxPackSearchActivity.this, SoundManage.SoundType.FAILURE);
                                         break;
                                     }
@@ -180,65 +167,60 @@ public class CashBoxPackSearchActivity extends AppCompatActivity {
                                     cardUserAdapter.notifyDataSetChanged();
                                     cashBoxPackConfirm.setIcCard2(userQueryMsg2.getUserID());
                                     SoundManage.PlaySound(CashBoxPackSearchActivity.this, SoundManage.SoundType.SUCCESS);
-                                    nowstate=2;
+                                    nowstate = 2;
                                     //这里需要获取信息列表
-                                    String cashBoxPackSearch=cashBoxPackSearchurl+"?icCard="+ HttpLogin.getIcCard() +"&&distributeTime="+datestr;
-                                    myLog.Write("cashBoxPackSearch="+cashBoxPackSearch);
+                                    String cashBoxPackSearch = cashBoxPackSearchurl + "?icCard=" + HttpLogin.getIcCard() + "&&distributeTime=" + datestr;
+                                    myLog.Write("cashBoxPackSearch=" + cashBoxPackSearch);
 
-                                    HttpTask httpTask=new HttpTask(cashBoxPackSearchurl+"?icCard="+ HttpLogin.getIcCard() +"&&distributeTime="+datestr,handler,201);
+                                    HttpTask httpTask = new HttpTask(cashBoxPackSearchurl + "?icCard=" + HttpLogin.getIcCard() + "&&distributeTime=" + datestr, handler, 201);
                                     httpTask.execute();
-                                }catch (Exception e)
-                                {
-                                    myLog.Write("获取到用户刷卡失败!"+e.getMessage());
-                                    toastMessage("获取到用户刷卡失败!"+e.getMessage());
+                                } catch (Exception e) {
+                                    myLog.Write("获取到用户刷卡失败!" + e.getMessage());
+                                    XToastUtils.error("获取到用户刷卡失败!" + e.getMessage());
                                     SoundManage.PlaySound(CashBoxPackSearchActivity.this, SoundManage.SoundType.FAILURE);
                                     break;
                                 }
                                 break;
                             case 2:
-                                UserQueryMsg userQueryMsg3=JSONObject.parseObject(me,UserQueryMsg.class);
-                                if(!userQueryMsg3.getCode().equals("0"))
-                                {
-                                    myLog.Write("获取到用户刷卡失败!"+userQueryMsg3.getMsg());
-                                    toastMessage("获取到用户刷卡失败!"+userQueryMsg3.getMsg());
+                                UserQueryMsg userQueryMsg3 = JSONObject.parseObject(me, UserQueryMsg.class);
+                                if (!userQueryMsg3.getCode().equals("0")) {
+                                    myLog.Write("获取到用户刷卡失败!" + userQueryMsg3.getMsg());
+                                    XToastUtils.error("获取到用户刷卡失败!" + userQueryMsg3.getMsg());
                                     SoundManage.PlaySound(CashBoxPackSearchActivity.this, SoundManage.SoundType.FAILURE);
                                     break;
                                 }
-                                if(userQueryMsg3.getRoleID().equals("6"))
+                                if (!check2People(userQueryMsg3.getRoleID()))//检查该用户类型人数
                                 {
-                                    myLog.Write("获取到用户刷卡失败:不是操作员卡:"+userQueryMsg3.getUserName());
-                                    toastMessage("获取到用户刷卡失败:不是操作员卡:"+userQueryMsg3.getUserName());
+                                    myLog.Write("该用户类型人数已满，不可再扫描!类型为:" + userQueryMsg3.getRoleID());
+                                    XToastUtils.error("该用户类型人数已满，不可再扫描!类型为:" + userQueryMsg3.getRoleID());
                                     SoundManage.PlaySound(CashBoxPackSearchActivity.this, SoundManage.SoundType.FAILURE);
                                     break;
                                 }
-                                try
-                                {
-                                    userQueryMsgs[2]=userQueryMsg3;
+                                try {
+                                    userQueryMsgs[2] = userQueryMsg3;
                                     cardUserAdapter.notifyDataSetChanged();
                                     cashBoxPackConfirm.setIcCard3(userQueryMsg3.getUserID());
                                     SoundManage.PlaySound(CashBoxPackSearchActivity.this, SoundManage.SoundType.SUCCESS);
-                                    nowstate=3;
-                                }catch (Exception e)
-                                {
-                                    myLog.Write("获取到用户刷卡失败!"+e.getMessage());
-                                    toastMessage("获取到用户刷卡失败!"+e.getMessage());
+                                    nowstate = 3;
+                                } catch (Exception e) {
+                                    myLog.Write("获取到用户刷卡失败!" + e.getMessage());
+                                    XToastUtils.error("获取到用户刷卡失败!" + e.getMessage());
                                     SoundManage.PlaySound(CashBoxPackSearchActivity.this, SoundManage.SoundType.FAILURE);
                                     break;
                                 }
                                 break;
                             case 3:
-                                UserQueryMsg userQueryMsg4=JSONObject.parseObject(me,UserQueryMsg.class);
-                                if(!userQueryMsg4.getCode().equals("0"))
-                                {
-                                    myLog.Write("获取到用户刷卡失败!"+userQueryMsg4.getMsg());
-                                    toastMessage("获取到用户刷卡失败!"+userQueryMsg4.getMsg());
+                                UserQueryMsg userQueryMsg4 = JSONObject.parseObject(me, UserQueryMsg.class);
+                                if (!userQueryMsg4.getCode().equals("0")) {
+                                    myLog.Write("获取到用户刷卡失败!" + userQueryMsg4.getMsg());
+                                    XToastUtils.error("获取到用户刷卡失败!" + userQueryMsg4.getMsg());
                                     SoundManage.PlaySound(CashBoxPackSearchActivity.this, SoundManage.SoundType.FAILURE);
                                     break;
                                 }
-                                if(userQueryMsg4.getRoleID().equals("6"))
+                                if (!check2People(userQueryMsg4.getRoleID()))//检查该用户类型人数
                                 {
-                                    myLog.Write("获取到用户刷卡失败:不是操作员卡:"+userQueryMsg4.getUserName());
-                                    myLog.Write("获取到用户刷卡失败:不是操作员卡:"+userQueryMsg4.getUserName());
+                                    myLog.Write("该用户类型人数已满，不可再扫描!类型为:" + userQueryMsg4.getRoleID());
+                                    XToastUtils.error("该用户类型人数已满，不可再扫描!类型为:" + userQueryMsg4.getRoleID());
                                     SoundManage.PlaySound(CashBoxPackSearchActivity.this, SoundManage.SoundType.FAILURE);
                                     break;
                                 }
@@ -249,10 +231,9 @@ public class CashBoxPackSearchActivity extends AppCompatActivity {
                                     cashBoxPackConfirm.setIcCard4(userQueryMsg4.getUserID());
                                     nowstate=4;
                                     SoundManage.PlaySound(CashBoxPackSearchActivity.this, SoundManage.SoundType.SUCCESS);
-                                }catch (Exception e)
-                                {
-                                    myLog.Write("获取到用户刷卡失败!"+e.getMessage());
-                                    toastMessage("获取到用户刷卡失败!"+e.getMessage());
+                                }catch (Exception e) {
+                                    myLog.Write("获取到用户刷卡失败!" + e.getMessage());
+                                    XToastUtils.error("获取到用户刷卡失败!" + e.getMessage());
                                     SoundManage.PlaySound(CashBoxPackSearchActivity.this, SoundManage.SoundType.FAILURE);
                                     break;
                                 }
@@ -263,19 +244,17 @@ public class CashBoxPackSearchActivity extends AppCompatActivity {
                         break;
                     case 201:
                         String rs=msg.getData().getString("httpRs");
-                        myLog.Write("获取到线路款包消息:"+rs);
-                        if(rs.contains("error"))
-                        {
-                            myLog.Write("获取到线路款包消息失败!"+rs);
-                            toastMessage("获取到线路款包消息失败!"+rs);
+                        myLog.Write("获取到线路款包消息:");
+                        if(rs.contains("error")) {
+                            myLog.Write("获取到线路款包消息失败!" + rs);
+                            XToastUtils.error("获取到线路款包消息失败!" + rs);
                             SoundManage.PlaySound(CashBoxPackSearchActivity.this, SoundManage.SoundType.FAILURE);
                             break;
                         }
                         cashBoxPackSearchMsg=JSONObject.parseObject(rs,CashBoxPackSearchMsg.class);
-                        if(!cashBoxPackSearchMsg.getCode().equals("0"))
-                        {
-                            myLog.Write("获取到线路款包消息失败!"+cashBoxPackSearchMsg.getMsg());
-                            toastMessage("获取到线路款包消息失败!"+cashBoxPackSearchMsg.getMsg());
+                        if(!cashBoxPackSearchMsg.getCode().equals("0")) {
+                            myLog.Write("获取到线路款包消息失败!" + cashBoxPackSearchMsg.getMsg());
+                            XToastUtils.error("获取到线路款包消息失败!" + cashBoxPackSearchMsg.getMsg());
                             SoundManage.PlaySound(CashBoxPackSearchActivity.this, SoundManage.SoundType.FAILURE);
                             break;
                         }
@@ -294,10 +273,9 @@ public class CashBoxPackSearchActivity extends AppCompatActivity {
                             }
 
                         }
-                        if(cashBoxList.size()==0)
-                        {
-                            myLog.Write("无该款包交取款明细"+rs);
-                            toastMessage("无该款包交取款明细"+rs);
+                        if(cashBoxList.size()==0) {
+                            myLog.Write("无该款包交取款明细" + rs);
+                            XToastUtils.info("无该款包交取款明细" + rs);
                             SoundManage.PlaySound(CashBoxPackSearchActivity.this, SoundManage.SoundType.FAILURE);
                             break;
                         }
@@ -307,22 +285,20 @@ public class CashBoxPackSearchActivity extends AppCompatActivity {
                     case 202:
                             String rs1=msg.getData().getString("httpRs");
                             myLog.Write("获取到提交消息:"+rs1);
-                            if(rs1.contains("error"))
-                            {
-                                myLog.Write("获取到提交失败消息!"+rs1);
-                                toastMessage("获取到提交失败消息!"+rs1);
+                            if(rs1.contains("error")) {
+                                myLog.Write("获取到提交失败消息!" + rs1);
+                                XToastUtils.error("获取到提交失败消息!" + rs1);
                                 SoundManage.PlaySound(CashBoxPackSearchActivity.this, SoundManage.SoundType.FAILURE);
                                 break;
                             }
                             BaseMsg baseMsg=JSONObject.parseObject(rs1,BaseMsg.class);
-                            if(!baseMsg.getCode().equals("0"))
-                            {
-                                myLog.Write("获取到提交失败消息:"+baseMsg.getMsg());
-                                toastMessage("获取到提交失败消息:"+baseMsg.getMsg());
+                            if(!baseMsg.getCode().equals("0")) {
+                                myLog.Write("获取到提交失败消息:" + baseMsg.getMsg());
+                                XToastUtils.error("获取到提交失败消息:" + baseMsg.getMsg());
                                 SoundManage.PlaySound(CashBoxPackSearchActivity.this, SoundManage.SoundType.FAILURE);
                                 break;
                             }
-                            toastMessage("提交成功!"+baseMsg.getMsg());
+                        XToastUtils.success("提交成功!" + baseMsg.getMsg());
                          //   btn_cashboxconfirm.setEnabled(false);
                             btn_cashBoxPackConfirm.setEnabled(false);
                             SoundManage.PlaySound(CashBoxPackSearchActivity.this, SoundManage.SoundType.SUCCESS);
@@ -339,7 +315,7 @@ public class CashBoxPackSearchActivity extends AppCompatActivity {
                if(!checkAllCashbox())
                {
                    myLog.Write("有款箱未扫描确认，无法提交！");
-                   toastMessage("有款箱未扫描确认，无法提交！");
+                   XToastUtils.info("有款箱未扫描确认，无法提交！");
                    SoundManage.PlaySound(CashBoxPackSearchActivity.this, SoundManage.SoundType.FAILURE);
                   return;
                }
@@ -421,8 +397,8 @@ public class CashBoxPackSearchActivity extends AppCompatActivity {
         try {
             mReader = RFIDWithUHFUART.getInstance();
         } catch (Exception ex) {
-            myLog.Write(this.getClass()+"启动失败:"+ex.getMessage());
-            toastMessage(ex.getMessage());
+            myLog.Write(this.getClass() + "启动失败:" + ex.getMessage());
+            XToastUtils.error("启动失败:" + ex.getMessage());
             return;
         }
 
@@ -487,47 +463,44 @@ public class CashBoxPackSearchActivity extends AppCompatActivity {
     }
     private void readTag()
     {
-        mReader.setPower(10);
+        mReader.setPower(MMKV.defaultMMKV().getInt("scanpower", 10));
         UHFTAGInfo strUII = mReader.inventorySingleTag();
         if (strUII!=null) {
             String strEPC = strUII.getEPC();
             String cardnum= EpcReader.getEpc(strEPC);
             myLog.Write("扫描到标签号:"+cardnum);
-            if(cardnum==null||cardnum.equals(""))
-            {
-                myLog.Write("扫描到款箱号:"+strEPC+"非法！");
-                toastMessage("扫描到款箱号:"+strEPC+"非法！");
+            if(cardnum==null||cardnum.equals("")) {
+                myLog.Write("扫描到款箱号:" + strEPC + "非法！");
+                XToastUtils.error("扫描到款箱号:" + strEPC + "非法！");
                 SoundManage.PlaySound(this, SoundManage.SoundType.FAILURE);
                 return;
             }
-            if(!cardnum.startsWith("W")&&!cardnum.startsWith("K")&&!cardnum.startsWith("HM"))
-            {
-                myLog.Write("扫描到款箱号:"+strEPC+"非法！");
-                toastMessage("扫描到款箱号:"+strEPC+"非法！");
+            if(!cardnum.startsWith("W")&&!cardnum.startsWith("K")&&!cardnum.startsWith("HM")) {
+                myLog.Write("扫描到款箱号:" + strEPC + "非法！");
+                XToastUtils.error("扫描到款箱号:" + strEPC + "非法！");
                 SoundManage.PlaySound(this, SoundManage.SoundType.FAILURE);
                 return;
             }
             // cardnum= cardnum.substring(0,5);
-            if(checkRepeat(cardnum)==false)
-            {
-                myLog.Write("扫描到款箱号:"+strEPC+"重复过滤");
+            if(checkRepeat(cardnum)==false) {
+                myLog.Write("扫描到款箱号:" + strEPC + "重复过滤");
+                XToastUtils.error("扫描到款箱号:" + cardnum + "重复！");
                 SoundManage.PlaySound(this, SoundManage.SoundType.FAILURE);
                 return;
             }
             if(nowstate!=4&&!cardnum.startsWith("HM"))
             {
                 myLog.Write("请操作员刷卡登录后扫描款箱确认...");
-                toastMessage("请操作员刷卡登录后扫描款箱确认...");
+                XToastUtils.error("请操作员刷卡登录后扫描款箱确认...");
                 SoundManage.PlaySound(this, SoundManage.SoundType.FAILURE);
                 return;
             }
             epclist.add(cardnum);
            if(nowstate==4)//登录完成可以扫描款箱
            {
-               if(!checkCashBoxList(cardnum))
-               {
-                   myLog.Write(cardnum+"款箱不在交接列表中...");
-                   toastMessage(cardnum+"款箱不在交接列表中...");
+               if(!checkCashBoxList(cardnum)) {
+                   myLog.Write(cardnum + "款箱不在交接列表中...");
+                   XToastUtils.error(cardnum + "款箱不在交接列表中...");
                    SoundManage.PlaySound(this, SoundManage.SoundType.FAILURE);
                    return;
                }
@@ -542,16 +515,13 @@ public class CashBoxPackSearchActivity extends AppCompatActivity {
             httpTask.execute();
 
         } else {
-            toastMessage("未扫描到款箱!");
+            XToastUtils.error("未扫描到款箱!");
             SoundManage.PlaySound(this, SoundManage.SoundType.FAILURE);
         }
     }
-    private boolean checkCashBoxList(String cardnum)
-    {
-        for(CashBox c:cashBoxList)
-        {
-            if(c.getCashBoxCode().equals(cardnum))
-            {
+    private boolean checkCashBoxList(String cardnum) {
+        for (CashBox c : cashBoxList) {
+            if (c.getCashBoxCode().equals(cardnum)) {
                 c.setColor("green");
                 return true;
             }
@@ -559,17 +529,31 @@ public class CashBoxPackSearchActivity extends AppCompatActivity {
         }
         return false;
     }
-    private boolean checkRepeat(String strEPC)
-    {
-        for (int i=0;i<epclist.size();i++)
-        {
-            if(epclist.get(i).equals(strEPC))
-            {
+
+    private boolean checkRepeat(String strEPC) {
+        for (int i = 0; i < epclist.size(); i++) {
+            if (epclist.get(i).equals(strEPC)) {
                 return false;
             }
         }
         return true;
     }
+
+    //当前扫描卡的人数类型大于2
+    private boolean check2People(String roleID) {
+        int count = 0;
+        for (UserQueryMsg userQueryMsg : userQueryMsgs) {
+            if (userQueryMsg == null) {
+                continue;
+            }
+            if (roleID.equals(userQueryMsg.getRoleID())) {
+                count++;
+            }
+        }
+        myLog.Write("该类型用户数量为：" + count);
+        return !(count >= 2);
+    }
+
     public void toastMessage(String msg) {
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
     }

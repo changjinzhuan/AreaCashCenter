@@ -6,9 +6,11 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v7.app.AppCompatActivity;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.View;
@@ -26,6 +28,7 @@ import android.widget.Toast;
 import com.alibaba.fastjson.JSONObject;
 import com.rscja.deviceapi.RFIDWithUHFUART;
 import com.rscja.deviceapi.entity.UHFTAGInfo;
+import com.tencent.mmkv.MMKV;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
@@ -48,6 +51,7 @@ import cn.kcrxorg.areacashcenter.httputil.HttpTask;
 import cn.kcrxorg.areacashcenter.mbutil.EpcReader;
 import cn.kcrxorg.areacashcenter.mbutil.MyLog;
 import cn.kcrxorg.areacashcenter.mbutil.SoundManage;
+import cn.kcrxorg.areacashcenter.mbutil.XToastUtils;
 
 public class CashSendApplyActivity extends AppCompatActivity {
 
@@ -58,8 +62,8 @@ public class CashSendApplyActivity extends AppCompatActivity {
     TextView tv_cashmoney;
     Spinner sp_servicetype;
     ServiceTypeMsg serviceTypeMsg;
-    String serviceTypeurl="http://172.66.1.2:8080/areaCashCenterTest/serviceTypeRecord";
-    String cashSendApplyurl="http://172.66.1.2:8080/areaCashCenterTest/cashSendApply";
+    String serviceTypeurl = MMKV.defaultMMKV().getString("serverurl", MyApp.DEFAULT_SERVER_URL) + "serviceTypeRecord";
+    String cashSendApplyurl = MMKV.defaultMMKV().getString("serverurl", MyApp.DEFAULT_SERVER_URL) + "cashSendApply";
     List<String> serviceTypeList;
     ArrayAdapter<String> serviceTypearrayAdapter;
     Button btn_addcash;
@@ -94,42 +98,43 @@ public class CashSendApplyActivity extends AppCompatActivity {
             @Override
             public void handleMessage(@NonNull Message msg) {
                 super.handleMessage(msg);
-                switch (msg.what)
-                {
+                switch (msg.what) {
                     case 100://业务提交响应消息
-                        String me=msg.getData().getString("httpRs");
-                        myLog.Write("获取到提交响应消息:"+me);
-                        if(me.contains("error"))
-                        {
-                            myLog.Write("业务提交响应失败!"+me);
-                            toastMessage("业务提交响应失败!"+me);
+                        String me = msg.getData().getString("httpRs");
+                        myLog.Write("获取到提交响应消息:" + me);
+                        if (me.contains("error")) {
+                            myLog.Write("业务提交响应失败!" + me);
+                            XToastUtils.error("业务提交响应失败!" + me);
                             SoundManage.PlaySound(CashSendApplyActivity.this, SoundManage.SoundType.FAILURE);
                             break;
                         }
-                        BaseMsg baseMsg=JSONObject.parseObject(me,BaseMsg.class);
-                        if(baseMsg.getCode().equals("0"))
-                        {
+                        BaseMsg baseMsg = JSONObject.parseObject(me, BaseMsg.class);
+                        if (baseMsg.getCode().equals("0")) {
                             SoundManage.PlaySound(CashSendApplyActivity.this, SoundManage.SoundType.SUCCESS);
-                            toastMessage("提交成功!");
+                            XToastUtils.success("提交成功!");
                             btn_scanbox.setEnabled(false);
-                        }else
-                        {
-                            toastMessage("提交失败"+baseMsg.getMsg());
+                        } else {
+                            XToastUtils.error("提交失败" + baseMsg.getMsg());
                         }
                         break;
                     case 200://业务选择框查询消息
-                        String rs=msg.getData().getString("httpRs");
-                        myLog.Write("获取到业务选择列表:"+rs);
-                        if(rs.contains("error"))
-                        {
-                            myLog.Write("获取到业务选择列表失败!"+rs);
-                            toastMessage("获取到业务选择列表失败!"+rs);
+                        String rs = msg.getData().getString("httpRs");
+                        myLog.Write("获取到业务选择列表:" + rs);
+                        if (rs.contains("error")) {
+                            myLog.Write("获取到业务选择列表失败!" + rs);
+                            XToastUtils.error("获取到业务选择列表失败!" + rs);
                             SoundManage.PlaySound(CashSendApplyActivity.this, SoundManage.SoundType.FAILURE);
                             break;
                         }
-                        serviceTypeMsg= JSONObject.parseObject(rs,ServiceTypeMsg.class);
-                        for(ServiceType serviceType:serviceTypeMsg.getServiceTypeList())
-                        {
+                        try {
+                            serviceTypeMsg = JSONObject.parseObject(rs, ServiceTypeMsg.class);
+                        } catch (Exception e) {
+                            myLog.Write("获取到业务选择列表失败!" + e);
+                            XToastUtils.error("获取到业务选择列表失败!" + e);
+                            SoundManage.PlaySound(CashSendApplyActivity.this, SoundManage.SoundType.FAILURE);
+                            break;
+                        }
+                        for (ServiceType serviceType : serviceTypeMsg.getServiceTypeList()) {
                             serviceTypeList.add(serviceType.getServiceTypeName());
                         }
                         serviceTypearrayAdapter.notifyDataSetChanged();
@@ -211,21 +216,21 @@ public class CashSendApplyActivity extends AppCompatActivity {
             public void onClick(View view) {
                 if(cashSendApply.getCashBoxList()==null||cashSendApply.getCashBoxList().size()==0)
                 {
-                    toastMessage("请扫描款箱后才可提交...");
+                    XToastUtils.info("请扫描款箱后才可提交...");
 
                     SoundManage.PlaySound(CashSendApplyActivity.this, SoundManage.SoundType.FAILURE);
                     return;
                 }
                 if(cashSendApply.getDistributeTime()==null||cashSendApply.getDistributeTime().equals(""))
                 {
-                    toastMessage("请选择配送日期后提交...");
+                    XToastUtils.info("请选择配送日期后提交...");
 
                     SoundManage.PlaySound(CashSendApplyActivity.this, SoundManage.SoundType.FAILURE);
                     return;
                 }
                 if(cashSendApply.getCashList()==null||cashSendApply.getCashList().size()==0)
                 {
-                    toastMessage("请添加明细后提交...");
+                    XToastUtils.info("请添加明细后提交...");
 
                     SoundManage.PlaySound(CashSendApplyActivity.this, SoundManage.SoundType.FAILURE);
                     return;
@@ -311,8 +316,8 @@ public class CashSendApplyActivity extends AppCompatActivity {
         try {
             mReader = RFIDWithUHFUART.getInstance();
         } catch (Exception ex) {
-            myLog.Write(this.getClass()+"启动失败:"+ex.getMessage());
-            toastMessage(ex.getMessage());
+            myLog.Write(this.getClass() + "启动失败:" + ex.getMessage());
+            XToastUtils.error(ex.getMessage());
             return;
         }
 
@@ -377,31 +382,29 @@ public class CashSendApplyActivity extends AppCompatActivity {
     }
     private void readTag()
     {
-        mReader.setPower(10);
+        mReader.setPower(MMKV.defaultMMKV().getInt("scanpower", 10));
         UHFTAGInfo strUII = mReader.inventorySingleTag();
         if (strUII!=null) {
             String strEPC = strUII.getEPC();
 //            addEPCToList(strEPC, strUII.getRssi());
 //            tv_count.setText("" + adapter.getCount());
             String cardnum=EpcReader.getEpc(strEPC);
-            if(cardnum==null||cardnum.equals(""))
-            {
-                myLog.Write("扫描到款箱号:"+strEPC+"非法！");
-                toastMessage("扫描到款箱号:"+strEPC+"非法！");
+            if(cardnum==null||cardnum.equals("")) {
+                myLog.Write("扫描到款箱号:" + strEPC + "非法！");
+                XToastUtils.error("扫描到款箱号:" + strEPC + "非法！");
                 SoundManage.PlaySound(this, SoundManage.SoundType.FAILURE);
                 return;
             }
-            if(!cardnum.startsWith("W")&&!cardnum.startsWith("K"))
-            {
-                myLog.Write("扫描到款箱号:"+strEPC+"非法！");
-                toastMessage("扫描到款箱号:"+strEPC+"非法！");
+            if (!cardnum.startsWith("W") && !cardnum.startsWith("K")) {
+                myLog.Write("扫描到款箱号:" + strEPC + "非法！");
+                XToastUtils.error("扫描到款箱号:" + strEPC + "非法！");
                 SoundManage.PlaySound(this, SoundManage.SoundType.FAILURE);
                 return;
             }
-            cardnum= cardnum.substring(0,5);
-            if(checkRepeat(cardnum)==false)
-            {
-                myLog.Write("扫描到款箱号:"+strEPC+"重复过滤");
+            cardnum = cardnum.substring(0, 5);
+            if (checkRepeat(cardnum) == false) {
+                myLog.Write("扫描到款箱号:" + strEPC + "重复过滤");
+                XToastUtils.error("扫描到款箱号:" + strEPC + "重复扫描");
                 SoundManage.PlaySound(this, SoundManage.SoundType.FAILURE);
                 return;
             }
@@ -423,7 +426,7 @@ public class CashSendApplyActivity extends AppCompatActivity {
             lv_boxs.setSelection(lv_boxs.getBottom());
 
         } else {
-            toastMessage("未扫描到款箱!");
+            XToastUtils.error("未扫描到款箱!");
             SoundManage.PlaySound(this, SoundManage.SoundType.FAILURE);
         }
     }

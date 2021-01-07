@@ -5,8 +5,10 @@ import android.app.ProgressDialog;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
-import android.support.annotation.NonNull;
-import android.support.v7.app.AppCompatActivity;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.View;
@@ -18,6 +20,7 @@ import android.widget.Toast;
 import com.alibaba.fastjson.JSONObject;
 import com.rscja.deviceapi.RFIDWithUHFUART;
 import com.rscja.deviceapi.entity.UHFTAGInfo;
+import com.tencent.mmkv.MMKV;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -26,18 +29,15 @@ import java.util.Date;
 import java.util.List;
 
 import cn.kcrxorg.areacashcenter.data.cashBoxConfirmSearch.CashBoxConfirmSearchMsg;
-import cn.kcrxorg.areacashcenter.data.model.CashBox;
-import cn.kcrxorg.areacashcenter.data.model.ServiceType;
-import cn.kcrxorg.areacashcenter.data.model.msg.BaseMsg;
-import cn.kcrxorg.areacashcenter.data.model.msg.ServiceTypeMsg;
 import cn.kcrxorg.areacashcenter.httputil.HttpTask;
 import cn.kcrxorg.areacashcenter.mbutil.EpcReader;
 import cn.kcrxorg.areacashcenter.mbutil.MyLog;
 import cn.kcrxorg.areacashcenter.mbutil.SoundManage;
+import cn.kcrxorg.areacashcenter.mbutil.XToastUtils;
 
 public class CashBoxConfirmSearchActivity extends AppCompatActivity {
 
-    String cashboxconfirmsearchurl="http://172.66.1.2:8080/areaCashCenterTest/cashBoxConfirmSearch";
+    String cashboxconfirmsearchurl = MMKV.defaultMMKV().getString("serverurl", MyApp.DEFAULT_SERVER_URL) + "cashBoxConfirmSearch";
     public RFIDWithUHFUART mReader;
     MyLog myLog;
     List<String> epclist;
@@ -58,29 +58,33 @@ public class CashBoxConfirmSearchActivity extends AppCompatActivity {
             @Override
             public void handleMessage(@NonNull Message msg) {
                 super.handleMessage(msg);
-                switch (msg.what)
-                {
+                switch (msg.what) {
 
                     case 200://查询消息
-                        String rs=msg.getData().getString("httpRs");
-                        myLog.Write("获取到查询消息列表:"+rs);
-                        if(rs.contains("error"))
-                        {
-                            myLog.Write("获取到查询消息失败!"+rs);
-                            toastMessage("获取到查询消息失败!"+rs);
+                        String rs = msg.getData().getString("httpRs");
+                        myLog.Write("获取到查询消息列表:" + rs);
+                        if (rs.contains("error")) {
+                            myLog.Write("获取到查询消息失败!" + rs);
+                            XToastUtils.error("获取到查询消息失败!" + rs);
                             SoundManage.PlaySound(CashBoxConfirmSearchActivity.this, SoundManage.SoundType.FAILURE);
                             break;
                         }
-                        CashBoxConfirmSearchMsg cashBoxConfirmSearchMsg=JSONObject.parseObject(rs,CashBoxConfirmSearchMsg.class);
-                        if(!cashBoxConfirmSearchMsg.getCode().equals("0"))
-                        {
-                            myLog.Write("获取到查询消息失败!"+cashBoxConfirmSearchMsg.getMsg());
-                            toastMessage("获取到查询消息失败!"+cashBoxConfirmSearchMsg.getMsg());
+                        CashBoxConfirmSearchMsg cashBoxConfirmSearchMsg = null;
+                        try {
+                            cashBoxConfirmSearchMsg = JSONObject.parseObject(rs, CashBoxConfirmSearchMsg.class);
+                        } catch (Exception e) {
+                            myLog.Write("获取到查询消息失败!" + cashBoxConfirmSearchMsg.getMsg());
+                            XToastUtils.error("获取到查询消息失败!" + cashBoxConfirmSearchMsg.getMsg());
                             SoundManage.PlaySound(CashBoxConfirmSearchActivity.this, SoundManage.SoundType.FAILURE);
                             break;
                         }
-                        if(cashBoxConfirmSearchMsg.getProcessConfirm().equals(""))
-                        {
+                        if (!cashBoxConfirmSearchMsg.getCode().equals("0")) {
+                            myLog.Write("获取到查询消息失败!" + cashBoxConfirmSearchMsg.getMsg());
+                            XToastUtils.error("获取到查询消息失败!" + cashBoxConfirmSearchMsg.getMsg());
+                            SoundManage.PlaySound(CashBoxConfirmSearchActivity.this, SoundManage.SoundType.FAILURE);
+                            break;
+                        }
+                        if (cashBoxConfirmSearchMsg.getProcessConfirm().equals("")) {
                             tv_processconfirm.setText("无流转消息");
                             myLog.Write("无流转消息");
                             SoundManage.PlaySound(CashBoxConfirmSearchActivity.this, SoundManage.SoundType.FAILURE);
@@ -167,8 +171,8 @@ public class CashBoxConfirmSearchActivity extends AppCompatActivity {
         try {
             mReader = RFIDWithUHFUART.getInstance();
         } catch (Exception ex) {
-            myLog.Write(this.getClass()+"启动失败:"+ex.getMessage());
-            toastMessage(ex.getMessage());
+            myLog.Write(this.getClass() + "启动失败:" + ex.getMessage());
+            XToastUtils.error(ex.getMessage());
             return;
         }
 
@@ -231,38 +235,35 @@ public class CashBoxConfirmSearchActivity extends AppCompatActivity {
     }
     private void readTag()
     {
-        mReader.setPower(10);
+        mReader.setPower(MMKV.defaultMMKV().getInt("scanpower", 10));
         UHFTAGInfo strUII = mReader.inventorySingleTag();
         if (strUII!=null) {
             String strEPC = strUII.getEPC();
 //            addEPCToList(strEPC, strUII.getRssi());
 //            tv_count.setText("" + adapter.getCount());
-            String cardnum= EpcReader.getEpc(strEPC);
-            myLog.Write("扫描到标签号:"+cardnum);
-            if(cardnum==null||cardnum.equals(""))
-            {
-                myLog.Write("扫描到款箱号:"+strEPC+"非法！");
-                toastMessage("扫描到款箱号:"+strEPC+"非法！");
+            String cardnum = EpcReader.getEpc(strEPC);
+            myLog.Write("扫描到标签号:" + cardnum);
+            if (cardnum == null || cardnum.equals("")) {
+                myLog.Write("扫描到款箱号:" + strEPC + "非法！");
+                XToastUtils.error("扫描到款箱号:" + strEPC + "非法！");
                 SoundManage.PlaySound(this, SoundManage.SoundType.FAILURE);
                 return;
             }
-            if(!cardnum.startsWith("W")&&!cardnum.startsWith("K")&&!cardnum.startsWith("HM"))
-            {
-                myLog.Write("扫描到款箱号:"+strEPC+"非法！");
-                toastMessage("扫描到款箱号:"+strEPC+"非法！");
+            if (!cardnum.startsWith("W") && !cardnum.startsWith("K") && !cardnum.startsWith("HM")) {
+                myLog.Write("扫描到款箱号:" + strEPC + "非法！");
+                XToastUtils.error("扫描到款箱号:" + strEPC + "非法！");
                 SoundManage.PlaySound(this, SoundManage.SoundType.FAILURE);
                 return;
             }
-            if(checkRepeat(cardnum)==false)
-            {
-                myLog.Write("扫描到款箱号:"+strEPC+"重复过滤");
+            if (checkRepeat(cardnum) == false) {
+                myLog.Write("扫描到款箱号:" + strEPC + "重复过滤");
+                XToastUtils.error("扫描到款箱号:" + strEPC + "重复扫描");
                 SoundManage.PlaySound(this, SoundManage.SoundType.FAILURE);
                 return;
             }
-            if(datestr.equals(""))
-            {
+            if (datestr.equals("")) {
                 myLog.Write("请选择流转查询日期！");
-                toastMessage("请选择流转查询日期！");
+                XToastUtils.error("请选择流转查询日期！");
                 SoundManage.PlaySound(this, SoundManage.SoundType.FAILURE);
                 return;
             }
@@ -272,7 +273,7 @@ public class CashBoxConfirmSearchActivity extends AppCompatActivity {
             httpTask.execute();
 
         } else {
-            toastMessage("未扫描到款箱!");
+            XToastUtils.error("未扫描到款箱!");
             SoundManage.PlaySound(this, SoundManage.SoundType.FAILURE);
         }
     }

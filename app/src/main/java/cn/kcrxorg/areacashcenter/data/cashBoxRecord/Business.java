@@ -89,6 +89,26 @@ public class Business {
     List<Zk> zkList;
     List<CashBox> cashBoxList;
 
+    public List<User> getUserList() {
+        return userList;
+    }
+
+    public void setUserList(List<User> userList) {
+        this.userList = userList;
+    }
+
+    public String getIsuse() {
+        return isuse;
+    }
+
+    public void setIsuse(String isuse) {
+        this.isuse = isuse;
+    }
+
+    List<User> userList;
+
+    String isuse;
+
     public List<CashBox> getCashBoxList() {
         return cashBoxList;
     }
