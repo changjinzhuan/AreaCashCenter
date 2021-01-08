@@ -3,10 +3,8 @@ package cn.kcrxorg.areacashcenter;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.Message;
-
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-
+import android.support.annotation.NonNull;
+import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.view.Window;
@@ -17,12 +15,10 @@ import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.alibaba.fastjson.JSONObject;
-import com.tencent.mmkv.MMKV;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-
 
 import cn.kcrxorg.areacashcenter.data.Cash;
 import cn.kcrxorg.areacashcenter.data.model.CashType;
@@ -32,10 +28,9 @@ import cn.kcrxorg.areacashcenter.data.model.msg.CashVoucherMsg;
 import cn.kcrxorg.areacashcenter.httputil.HttpTask;
 import cn.kcrxorg.areacashcenter.mbutil.MyLog;
 import cn.kcrxorg.areacashcenter.mbutil.SoundManage;
-import cn.kcrxorg.areacashcenter.mbutil.XToastUtils;
-
 
 public class AddCashActivity extends AppCompatActivity {
+
     Cash cash;
     Cash cashview;
 
@@ -56,8 +51,8 @@ public class AddCashActivity extends AppCompatActivity {
 
     MyLog myLog;
 
-    String cashtypeurl = MMKV.defaultMMKV().getString("serverurl", MyApp.DEFAULT_SERVER_URL) + "cashTypeRecord";
-    String cashvoucherurl = MMKV.defaultMMKV().getString("serverurl", MyApp.DEFAULT_SERVER_URL) + "cashVoucherRecord";
+    String cashtypeurl="http://172.66.1.2:8080/areaCashCenterTest/cashTypeRecord";
+    String cashvoucherurl="http://172.66.1.2:8080/areaCashCenterTest/cashVoucherRecord";
     Handler handler;
 
     BigDecimal cashmoney;
@@ -95,18 +90,14 @@ public class AddCashActivity extends AppCompatActivity {
         btn_addcashsub.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (et_cashmoney.getText().equals("")) {
-                    XToastUtils.error("输入的金额有误，无法添加");
+                cashmoney=new BigDecimal(et_cashmoney.getText()+"");
+                if(cashmoney.compareTo(new BigDecimal(0))!=1)
+                {
+                    toastMessage("输入的金额有误，无法添加");
                     SoundManage.PlaySound(AddCashActivity.this, SoundManage.SoundType.FAILURE);
                     return;
                 }
-                cashmoney = new BigDecimal(et_cashmoney.getText() + "");
-                if (cashmoney.compareTo(new BigDecimal(0)) != 1) {
-                    XToastUtils.error("输入的金额有误，无法添加");
-                    SoundManage.PlaySound(AddCashActivity.this, SoundManage.SoundType.FAILURE);
-                    return;
-                }
-                cashview.setCashMoney(et_cashmoney.getText() + "");
+                cashview.setCashMoney(et_cashmoney.getText()+"");
                 cashview.setCashTypeId(cashtypelist.get(sp_cashtypeid.getSelectedItemPosition()));
                 cashview.setCashVoucherId(cashvoucherlist.get(sp_cashvoucherid.getSelectedItemPosition()));
                 cashview.setPhysicalTypeId("现金");
@@ -131,33 +122,24 @@ public class AddCashActivity extends AppCompatActivity {
             @Override
             public void handleMessage(@NonNull Message msg) {
                 super.handleMessage(msg);
-                switch (msg.what) {
+                switch (msg.what)
+                {
                     case 201://类型消息
-                        String rs = msg.getData().getString("httpRs");
-                        myLog.Write("获取到类型消息列表:" + rs);
-                        try {
-                            cashTypeMsg = JSONObject.parseObject(rs, CashTypeMsg.class);
-                        } catch (Exception e) {
-                            myLog.Write("获取到类型消息列表失败:" + e);
-                            XToastUtils.error("获取到类型消息列表失败:" + e);
-                            break;
-                        }
-                        for (CashType cashType : cashTypeMsg.getCashTypeList()) {
+                        String rs=msg.getData().getString("httpRs");
+                        myLog.Write("获取到类型消息列表:"+rs);
+                        cashTypeMsg= JSONObject.parseObject(rs, CashTypeMsg.class);
+                        for(CashType cashType:cashTypeMsg.getCashTypeList())
+                        {
                             cashtypelist.add(cashType.getCashTypeName());
                         }
                         cashtypeadapater.notifyDataSetChanged();
                         break;
                     case 202://券别消息
-                        String rs1 = msg.getData().getString("httpRs");
-                        myLog.Write("获取到券别消息列表:" + rs1);
-                        try {
-                            cashVoucherMsg = JSONObject.parseObject(rs1, CashVoucherMsg.class);
-                        } catch (Exception e) {
-                            myLog.Write("获取到券别消息列表失败:" + e);
-                            XToastUtils.error("获取到券别消息列表失败:" + e);
-                            break;
-                        }
-                        for (CashVoucher cashVoucher : cashVoucherMsg.getCashVoucherList()) {
+                        String rs1=msg.getData().getString("httpRs");
+                        myLog.Write("获取到券别消息列表:"+rs1);
+                        cashVoucherMsg= JSONObject.parseObject(rs1, CashVoucherMsg.class);
+                        for(CashVoucher cashVoucher:cashVoucherMsg.getCashVoucherList())
+                        {
                             cashvoucherlist.add(cashVoucher.getCashVoucherName());
                         }
                         cashvoucheradapater.notifyDataSetChanged();

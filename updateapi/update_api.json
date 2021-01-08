@@ -1,0 +1,12 @@
+{
+  "Code": 0,
+  "Msg": "",
+  "UpdateStatus": 1,
+  "VersionCode": 2,
+  "VersionName": "1.01",
+  "UploadTime": "2021-01-01 01:00:00",
+  "ModifyContent": "\r\n1、修复部分已知问题。\n2、优化了部分组件功能。\n3、新增更多使用演示。",
+  "DownloadUrl": "http://120.25.169.17/download/app-release.apk",
+  "ApkSize": 25268,
+  "ApkMd5": ""
+}

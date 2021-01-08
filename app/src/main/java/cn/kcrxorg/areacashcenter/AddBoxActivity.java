@@ -3,9 +3,7 @@ package cn.kcrxorg.areacashcenter;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.AsyncTask;
-
-import androidx.appcompat.app.AppCompatActivity;
-
+import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.Window;
@@ -14,7 +12,6 @@ import android.widget.Toast;
 
 import com.rscja.deviceapi.RFIDWithUHFUART;
 import com.rscja.deviceapi.entity.UHFTAGInfo;
-import com.tencent.mmkv.MMKV;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +21,6 @@ import cn.kcrxorg.areacashcenter.data.model.CashBox;
 import cn.kcrxorg.areacashcenter.mbutil.EpcReader;
 import cn.kcrxorg.areacashcenter.mbutil.MyLog;
 import cn.kcrxorg.areacashcenter.mbutil.SoundManage;
-import cn.kcrxorg.areacashcenter.mbutil.XToastUtils;
 
 public class AddBoxActivity extends AppCompatActivity {
     public RFIDWithUHFUART mReader;
@@ -64,8 +60,8 @@ public class AddBoxActivity extends AppCompatActivity {
         try {
             mReader = RFIDWithUHFUART.getInstance();
         } catch (Exception ex) {
-            myLog.Write(this.getClass() + "启动失败:" + ex.getMessage());
-            XToastUtils.error("启动失败:" + ex.getMessage());
+            myLog.Write(this.getClass()+"启动失败:"+ex.getMessage());
+            toastMessage(ex.getMessage());
             return;
         }
 
@@ -121,38 +117,40 @@ public class AddBoxActivity extends AppCompatActivity {
     public boolean onKeyDown(int keyCode, KeyEvent event) {
 
         //  myLog.Write("按钮被按下keyCode="+keyCode);//280 扳机 139左scan 293 右scan
-        if (keyCode == 139 || keyCode == 280 || keyCode == 293) {
+        if (keyCode == 139 ||keyCode == 280 ||keyCode == 293)
+        {
             readTag();
         }
+
         return super.onKeyDown(keyCode, event);
     }
-
     List<String> epclist;
-
-    private void readTag() {
-        mReader.setPower(MMKV.defaultMMKV().getInt("scanpower", 10));
-        myLog.Write("启动功率为:" + mReader.getPower());
+    private void readTag()
+    {
+        mReader.setPower(10);
         UHFTAGInfo strUII = mReader.inventorySingleTag();
-        if (strUII != null) {
+        if (strUII!=null) {
             String strEPC = strUII.getEPC();
 
-            String cardnum = EpcReader.getEpc(strEPC);
-            if (cardnum == null || cardnum.equals("")) {
-                myLog.Write("扫描到款箱号:" + strEPC + "非法！");
-                XToastUtils.error("扫描到款箱号:" + strEPC + "非法！");
+            String cardnum= EpcReader.getEpc(strEPC);
+            if(cardnum==null||cardnum.equals(""))
+            {
+                myLog.Write("扫描到款箱号:"+strEPC+"非法！");
+                toastMessage("扫描到款箱号:"+strEPC+"非法！");
                 SoundManage.PlaySound(this, SoundManage.SoundType.FAILURE);
                 return;
             }
-            if (!cardnum.startsWith("W") && !cardnum.startsWith("K")) {
-                myLog.Write("扫描到款箱号:" + strEPC + "非法！");
-                XToastUtils.error("扫描到款箱号:" + strEPC + "非法！");
+            if(!cardnum.startsWith("W")&&!cardnum.startsWith("K"))
+            {
+                myLog.Write("扫描到款箱号:"+strEPC+"非法！");
+                toastMessage("扫描到款箱号:"+strEPC+"非法！");
                 SoundManage.PlaySound(this, SoundManage.SoundType.FAILURE);
                 return;
             }
             cardnum= cardnum.substring(0,5);
-            if(checkRepeat(cardnum)==false) {
-                myLog.Write("扫描到款箱号:" + strEPC + "重复过滤");
-                XToastUtils.error("扫描到款箱号:" + cardnum + "重复！");
+            if(checkRepeat(cardnum)==false)
+            {
+                myLog.Write("扫描到款箱号:"+strEPC+"重复过滤");
                 SoundManage.PlaySound(this, SoundManage.SoundType.FAILURE);
                 return;
             }
@@ -164,7 +162,7 @@ public class AddBoxActivity extends AppCompatActivity {
            // getCashVoucherMsg(cardnum);
             SoundManage.PlaySound(this, SoundManage.SoundType.SUCCESS);
         } else {
-            XToastUtils.error("未扫描到款箱!");
+            toastMessage("未扫描到款箱!");
             SoundManage.PlaySound(this, SoundManage.SoundType.FAILURE);
         }
     }
