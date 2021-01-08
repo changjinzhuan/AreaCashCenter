@@ -8,7 +8,11 @@ import butterknife.OnClick;
 import cn.kcrxorg.areacashcenter.adapter.cashboxrecord.CashBoxAdapter;
 import cn.kcrxorg.areacashcenter.data.CashBoxInventoryRecord.CashBoxInventoryAdd;
 import cn.kcrxorg.areacashcenter.data.CashBoxInventoryRecord.CashBoxInventoryRecordMsg;
+import cn.kcrxorg.areacashcenter.data.cashBoxLineRecord.CashBoxLineRecordMsg;
+import cn.kcrxorg.areacashcenter.data.cashBoxRecord.Business;
+import cn.kcrxorg.areacashcenter.data.cashBoxRecord.CashBoxRecordMsg;
 import cn.kcrxorg.areacashcenter.data.model.CashBox;
+import cn.kcrxorg.areacashcenter.data.model.CashBoxError;
 import cn.kcrxorg.areacashcenter.data.model.msg.BaseMsg;
 import cn.kcrxorg.areacashcenter.data.model.msg.HttpLogin;
 import cn.kcrxorg.areacashcenter.httputil.HttpTask;
@@ -30,6 +34,7 @@ import android.widget.TextView;
 import com.alibaba.fastjson.JSONObject;
 import com.rscja.deviceapi.entity.UHFTAGInfo;
 import com.tencent.mmkv.MMKV;
+import com.xuexiang.xui.widget.textview.badge.BadgeView;
 import com.xuexiang.xui.widget.textview.supertextview.SuperButton;
 import com.xuexiang.xui.widget.textview.supertextview.SuperTextView;
 
@@ -47,19 +52,31 @@ public class CashBoxInventoryActivity extends UHFMainActivity {
     SuperTextView tv_invertorystate;
     @BindView(R.id.btn_subinventory)
     SuperButton btn_subinventory;
+    @BindView(R.id.btn_scan_error)
+    SuperButton btn_scan_error;
 
-    CashBoxInventoryRecordMsg cashBoxInventoryRecordMsg;
+
+    CashBoxLineRecordMsg cashBoxLineRecordMsg;
 
     CashBoxAdapter cashBoxAdapter;
     List<CashBox> cashBoxList;
     private boolean loopFlag = false;
     private boolean isinventoryFlag = false;
 
+    List<CashBoxError> cashBoxErrorList;
+    BadgeView badgeView;
+
 
     String cashBoxInventoryRecordurl = MMKV.defaultMMKV().getString("serverurl", MyApp.DEFAULT_SERVER_URL) + "cashBoxInventoryRecord";
     String cashBoxInventoryAddurl = MMKV.defaultMMKV().getString("serverurl", MyApp.DEFAULT_SERVER_URL) + "cashBoxInventoryAdd";
 
+
+    String cashboxLineRecordurl = MMKV.defaultMMKV().getString("serverurl", MyApp.DEFAULT_SERVER_URL) + "cashBoxLineRecord?";
+    String geturltest = "http://192.168.2.2:8080/dowload/test.json";
+    String cashBoxInventoryRecord = MMKV.defaultMMKV().getString("serverurl", MyApp.DEFAULT_SERVER_URL) + "cashBoxInventoryRecord?";
     int scantype;
+    String datastr = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+    private boolean isfirst = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,12 +87,11 @@ public class CashBoxInventoryActivity extends UHFMainActivity {
 
         scantype = getIntent().getIntExtra("scantype", -1);
         cashBoxList = new ArrayList<CashBox>();
+        cashBoxErrorList = new ArrayList<>();
+        badgeView = new BadgeView(CashBoxInventoryActivity.this);
+        badgeView.bindTarget(btn_scan_error);
         cashBoxAdapter = new CashBoxAdapter(this, cashBoxList);
         lv_invertory.setAdapter(cashBoxAdapter);
-
-        if (scantype == 3) {
-            btn_subinventory.setVisibility(View.GONE);
-        }
 
         handler = new Handler() {
             @Override
@@ -83,66 +99,70 @@ public class CashBoxInventoryActivity extends UHFMainActivity {
                 super.handleMessage(msg);
                 switch (msg.what) {
                     case 200://刷新数据
-                        String rs = msg.getData().getString("httpRs");
-                        myLog.Write("获取到出入库业务:" + rs);
+                        String me = msg.getData().getString("httpRs");
+                        //     myLog.Write("获取到出入库业务:" + me);
                         MProgressDialogTool.stop();
-                        if (rs.contains("error")) {
-                            myLog.Write("获取到出入库业务失败!" + rs);
-                            XToastUtils.error("获取到出入库业务失败!" + rs);
+                        if (me.contains("error!")) {
+                            myLog.Write("获取交取款信息失败:" + me);
+                            XToastUtils.error("获取交取款信息失败:" + me);
                             SoundManage.PlaySound(CashBoxInventoryActivity.this, SoundManage.SoundType.FAILURE);
                             break;
                         }
-
                         try {
-                            cashBoxInventoryRecordMsg = JSONObject.parseObject(rs, CashBoxInventoryRecordMsg.class);
+                            cashBoxLineRecordMsg = JSONObject.parseObject(me, CashBoxLineRecordMsg.class);
                         } catch (Exception e) {
-                            myLog.Write("获取到出入库业务失败!" + e);
-                            XToastUtils.error("获取到出入库业务失败!" + e);
+                            myLog.Write("获取交取款信息失败" + e);
+                            XToastUtils.error("获取交取款信息失败" + e);
                             SoundManage.PlaySound(CashBoxInventoryActivity.this, SoundManage.SoundType.FAILURE);
                             break;
                         }
-                        if (!cashBoxInventoryRecordMsg.getCode().equals("0")) {
-                            myLog.Write("获取到出入库业务失败!" + cashBoxInventoryRecordMsg.getMsg());
-                            XToastUtils.error("获取到出入库业务失败!" + cashBoxInventoryRecordMsg.getMsg());
+                        if (cashBoxLineRecordMsg.getCashBoxList().size() == 0) {
+                            myLog.Write("该款包交取款明细为空" + me);
+                            XToastUtils.error("该款包交取款明细为空:" + me);
                             SoundManage.PlaySound(CashBoxInventoryActivity.this, SoundManage.SoundType.FAILURE);
                             break;
                         }
-                        if (cashBoxInventoryRecordMsg.getCashBoxList().size() == 0) {
-                            myLog.Write("获取到出入库业务,款包数量为空");
-                            XToastUtils.error("获取到出入库业务,款包数量为空");
-                            SoundManage.PlaySound(CashBoxInventoryActivity.this, SoundManage.SoundType.FAILURE);
-                            break;
-                        }
-                        for (CashBox c : cashBoxInventoryRecordMsg.getCashBoxList()) {
+                        for (CashBox c : cashBoxLineRecordMsg.getCashBoxList()) {
                             cashBoxList.add(c);
                         }
+                        myLog.Write("获取到线路款包明细" + cashBoxList.size() + "条");
+                        XToastUtils.success("获取到线路款包明细" + cashBoxList.size() + "条");
+                        SoundManage.PlaySound(CashBoxInventoryActivity.this, SoundManage.SoundType.SUCCESS);
                         cashBoxAdapter.notifyDataSetChanged();
-
                         break;
-                    case 201://刷卡数据
+                    case 201://UHF天线数据 第一箱数据
                         String result = msg.obj + "";
-                        myLog.Write("盘点读取到卡号" + result);
-                        if (cashBoxInventoryRecordMsg.getCashBoxList() == null || cashBoxInventoryRecordMsg.getCashBoxList().size() == 0) {
-                            CashBox cashBox = new CashBox();
-                            cashBox.setCashBoxCode(result);
-                            cashBox.setColor("green");
-                            cashBoxList.add(cashBox);
-                            myLog.Write("cashBoxList.size=" + cashBoxList.size());
-                            SoundManage.PlaySound(CashBoxInventoryActivity.this, SoundManage.SoundType.SUCCESS);
-                            cashBoxAdapter.notifyDataSetChanged();
-                            break;
-                        } else {
-                            for (CashBox c : cashBoxList) {
-                                if (c.getCashBoxCode().equals(result)) {
-                                    c.setColor("green");
-                                    SoundManage.PlaySound(CashBoxInventoryActivity.this, SoundManage.SoundType.SUCCESS);
-                                }
+                        myLog.Write("盘点读取第一箱数据卡号" + result);
+                        isfirst = false;
+                        getCashVoucherMsg(result, datastr);//获取款箱列表
+                        epclist.clear();
+                        isinventoryFlag = false;
+                        stopInventory();
+                        break;
+                    case 203: //UHF后续数据
+                        String result2 = msg.obj + "";
+                        myLog.Write("盘点读取后续卡号" + result2);
+//                        if(cashBoxList==null||cashBoxList.size()==0)
+//                        {
+//                            CashBox cashBox=new CashBox();
+//                            cashBox.setCashBoxCode(result2);
+//                            cashBox.setColor("green");
+//                            cashBoxList.add(cashBox);
+//                            cashBoxAdapter.notifyDataSetChanged();
+//                            break;
+//                        }
+                        for (CashBox c : cashBoxList) {
+                            if (c.getCashBoxCode().equals(result2)) {
+                                c.setColor("green");
+                                SoundManage.PlaySound(CashBoxInventoryActivity.this, SoundManage.SoundType.SUCCESS);
+                            } else {
+                                setCashBoxError(c.getCashBoxCode(), "不在任务列表");
+                                myLog.Write(c.getCashBoxCode() + "不在任务列表");
                             }
                         }
                         cashBoxAdapter.notifyDataSetChanged();
                         break;
-
-                    case 202:
+                    case 202://提交结果数据
                         String subrs = msg.getData().getString("httpRs");
                         myLog.Write("获取到出入库业务提交结果" + subrs);
                         if (subrs.contains("error")) {
@@ -177,13 +197,38 @@ public class CashBoxInventoryActivity extends UHFMainActivity {
                 }
             }
         };
-        initData();
+        //   initData();
+
+        //盘库业务，直接获取任务列表并且不提交
+        if (scantype == 3) {
+            btn_subinventory.setVisibility(View.GONE);
+            //不需要首个扫描
+            isfirst = false;
+            //获取盘库业务
+            getCashBoxInventoryRecord();
+        }
     }
 
-    private void initData() {
+    //获取盘库库存明细
+    private void getCashBoxInventoryRecord() {
         MProgressDialogTool.init(this, "正在查找出入库业务数据...");
         String url = cashBoxInventoryRecordurl + "?bankSn=" + HttpLogin.getBankSN();
         HttpTask httpTask = new HttpTask(url, handler, 200);
+        httpTask.execute();
+    }
+
+    private void initData() {
+        String url = cashBoxInventoryRecordurl + "?bankSn=" + HttpLogin.getBankSN();
+        HttpTask httpTask = new HttpTask(url, handler, 200);
+        httpTask.execute();
+    }
+
+    private void getCashVoucherMsg(String cashboxcode, String datestr) {
+        MProgressDialogTool.init(this, "正在查找出入库业务数据...");
+        myLog.Write("正在查找出入库业务数据...");
+        myLog.Write("url=" + cashboxLineRecordurl + "cashBoxCode=" + cashboxcode + "&&cashBoxDate=" + datestr);
+        // HttpTask httpTask=new HttpTask(cashboxLineRecordurl+"cashBoxCode="+cashboxcode+"&&cashBoxDate="+datestr,handler,200);
+        HttpTask httpTask = new HttpTask(cashboxLineRecordurl + "cashBoxCode=" + cashboxcode + "&&cashBoxDate=" + datestr, handler, 200);
         httpTask.execute();
     }
 
@@ -216,7 +261,6 @@ public class CashBoxInventoryActivity extends UHFMainActivity {
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
 
-        //  myLog.Write("按钮被按下keyCode="+keyCode);//280 扳机 139左scan 293 右scan
         if (keyCode == 139 || keyCode == 280 || keyCode == 293) {
             isinventoryFlag = !isinventoryFlag;
             readTag();
@@ -260,6 +304,15 @@ public class CashBoxInventoryActivity extends UHFMainActivity {
         return true;
     }
 
+
+    private void setCashBoxError(String cardnum, String error) {
+        CashBoxError cashBoxError = new CashBoxError();
+        cashBoxError.setCashBoxCode(cardnum);
+        cashBoxError.setError(error);
+        cashBoxErrorList.add(cashBoxError);
+        badgeView.setBadgeNumber(cashBoxErrorList.size());
+    }
+
     class TagThread extends Thread {
         @Override
         public void run() {
@@ -268,33 +321,37 @@ public class CashBoxInventoryActivity extends UHFMainActivity {
             UHFTAGInfo res = null;
             while (loopFlag) {
                 res = mReader.readTagFromBuffer();
-                // myLog.Write("loopping....");
                 if (res != null) {
                     strEPC = res.getEPC();
+
                     String cardnum = EpcReader.getEpc(strEPC);
                     myLog.Write("扫描到标签号:" + cardnum);
                     if (cardnum == null || cardnum.equals("")) {
                         myLog.Write("扫描到款箱号:" + strEPC + "非法！");
-                        //    XToastUtils.error("扫描到款箱号:"+strEPC+"非法！");
-                        //    SoundManage.PlaySound(CashBoxInventoryActivity.this, SoundManage.SoundType.FAILURE);
+                        //   setCashBoxError(strEPC,"扫描到款箱号:" + strEPC + "非法！");
                         continue;
                     }
+                    //包含@的是二代款包
                     if (!cardnum.startsWith("W") && !cardnum.startsWith("K")) {
                         myLog.Write("扫描到款箱号:" + strEPC + "非法！");
-                        //     XToastUtils.error("扫描到款箱号:"+strEPC+"非法！");
-                        //      SoundManage.PlaySound(this, SoundManage.SoundType.FAILURE);
+                        //  setCashBoxError(cardnum,"扫描到款箱号:" + strEPC + "非法！");
                         continue;
                     }
                     if (checkRepeat(cardnum) == false) {
                         myLog.Write("扫描到款箱号:" + strEPC + "重复过滤");
-                        //     XToastUtils.error("扫描到款箱号:"+strEPC+"重复扫描");
-                        //    SoundManage.PlaySound(this, SoundManage.SoundType.FAILURE);
                         continue;
                     }
                     epclist.add(cardnum);
-                    Message msg = handler.obtainMessage(201);
-                    msg.obj = cardnum;
-                    handler.sendMessage(msg);
+
+                    if (isfirst) {
+                        Message msg = handler.obtainMessage(201);
+                        msg.obj = cardnum;
+                        handler.sendMessage(msg);
+                    } else {
+                        Message msg = handler.obtainMessage(203);
+                        msg.obj = cardnum;
+                        handler.sendMessage(msg);
+                    }
                 }
             }
         }

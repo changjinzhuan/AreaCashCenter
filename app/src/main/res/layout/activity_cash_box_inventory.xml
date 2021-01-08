@@ -37,10 +37,19 @@
             android:textSize="24sp"
             app:sCornersRadius="10dp" />
 
+        <com.xuexiang.xui.widget.textview.supertextview.SuperButton
+            android:id="@+id/btn_scan_error"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="扫描错误消息"
+            android:textSize="24sp"
+            app:sCornersRadius="10dp"
+            android:visibility="gone" />
+
         <ListView
             android:id="@+id/lv_invertory"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="wrap_content" />
 
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

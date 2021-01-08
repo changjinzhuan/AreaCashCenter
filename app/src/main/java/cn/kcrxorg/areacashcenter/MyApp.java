@@ -1,13 +1,21 @@
 package cn.kcrxorg.areacashcenter;
 
 import android.app.Application;
+import android.content.Context;
 import android.util.Log;
 
 import com.tencent.mmkv.MMKV;
+import com.xuexiang.xpage.AppPageConfig;
+import com.xuexiang.xpage.PageConfig;
+import com.xuexiang.xpage.PageConfiguration;
+import com.xuexiang.xpage.base.XPageActivity;
+import com.xuexiang.xpage.model.PageInfo;
 import com.xuexiang.xupdate.XUpdate;
 import com.xuexiang.xupdate.entity.UpdateError;
 import com.xuexiang.xupdate.listener.OnUpdateFailureListener;
 import com.xuexiang.xupdate.utils.UpdateUtils;
+
+import java.util.List;
 
 import cn.kcrxorg.areacashcenter.httputil.update.OkHttpUpdateHttpServiceImpl;
 import cn.kcrxorg.areacashcenter.mbutil.MyLog;
@@ -25,6 +33,7 @@ public class MyApp extends Application {
 
         initMMKV();
         initXupdate();
+        initXPage();
     }
 
     private void initMMKV() {
@@ -46,15 +55,26 @@ public class MyApp extends Application {
                 .setOnUpdateFailureListener(new OnUpdateFailureListener() {     //设置版本更新出错的监听
                     @Override
                     public void onFailure(UpdateError error) {
-//                        Log.e("kcrx","error code="+error.getCode());
-//                        if (error.getCode() != UpdateError.ERROR.CHECK_NO_NEW_VERSION) {          //对不同错误进行处理
-//                            XToastUtils.toast(error.toString());
-//                        }
-                        XToastUtils.error(error.toString());
+                        XToastUtils.info(error.toString());
                     }
                 })
                 .supportSilentInstall(true)                                     //设置是否支持静默安装，默认是true
                 .setIUpdateHttpService(new OkHttpUpdateHttpServiceImpl())           //这个必须设置！实现网络请求功能。
+                .init(this);
+    }
+
+    private void initXPage() {
+        PageConfig.getInstance()
+                .setPageConfiguration(new PageConfiguration() { //页面注册
+                    @Override
+                    public List<PageInfo> registerPages(Context context) {
+                        //自动注册页面,是编译时自动生成的，build一下就出来了。如果你还没使用@Page的话，暂时是不会生成的。
+                        return AppPageConfig.getInstance().getPages(); //自动注册页面
+                    }
+                })
+                .debug("PageLog")       //开启调试
+                .setContainActivityClazz(XPageActivity.class) //设置默认的容器Activity
+                .enableWatcher(false)   //设置是否开启内存泄露监测
                 .init(this);
     }
 }

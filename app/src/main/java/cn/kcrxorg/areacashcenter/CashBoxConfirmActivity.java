@@ -448,7 +448,7 @@ public class CashBoxConfirmActivity extends AppCompatActivity {
                 return;
             }
             epclist.add(cardnum);
-            if (nowstate == 4 && cardnum.startsWith("K") && !cardnum.startsWith("W"))//已经登录完成，可以扫描款箱...
+            if (nowstate == 4 && (cardnum.startsWith("K") || cardnum.startsWith("W")))//已经登录完成，可以扫描款箱...
             {
                 if (!checkCashBoxList(cardnum)) {
                     myLog.Write(cardnum + "款箱不在交接列表中...");
@@ -465,12 +465,10 @@ public class CashBoxConfirmActivity extends AppCompatActivity {
                 SoundManage.PlaySound(this, SoundManage.SoundType.SUCCESS);
                 return;
             }
-
             String cardurl=url+"?icCard="+cardnum;
             myLog.Write("刷卡登录提交:"+cardurl);
             HttpTask httpTask=new HttpTask(cardurl,handler,200);
             httpTask.execute();
-
         } else {
             XToastUtils.error("未扫描到款箱!");
             SoundManage.PlaySound(this, SoundManage.SoundType.FAILURE);

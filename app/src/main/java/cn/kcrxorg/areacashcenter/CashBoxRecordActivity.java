@@ -103,7 +103,6 @@ public class CashBoxRecordActivity extends AppCompatActivity {
                             SoundManage.PlaySound(CashBoxRecordActivity.this, SoundManage.SoundType.FAILURE);
                             break;
                         }
-
                         try {
                             cashBoxRecordMsg = JSONObject.parseObject(me, CashBoxRecordMsg.class);
                         } catch (Exception e) {
@@ -284,7 +283,6 @@ public class CashBoxRecordActivity extends AppCompatActivity {
     {
         for(Business b:newbusinessList)
         {
-            // myLog.Write("b.getCashBoxList().size()="+b.getCashBoxList().size());
             if(b.getCashBoxList().size()==0||b.getCashBoxList()==null)
             {
                 return false;
@@ -339,17 +337,13 @@ public class CashBoxRecordActivity extends AppCompatActivity {
     private void getCashVoucherMsg(String cashboxcode,String datestr) {
         myLog.Write("开始获取到交取款明细列表...");
         myLog.Write("url="+cashboxcodeurl+"cashBoxCode="+cashboxcode+"&&cashBoxDate="+datestr);
-
         HttpTask httpTask=new HttpTask(cashboxcodeurl+"cashBoxCode="+cashboxcode+"&&cashBoxDate="+datestr,handler,200);
         httpTask.execute();
     }
 
     @Override
     protected void onDestroy() {
-//       myLog.Write("我是onDestroy");
-//        if (mReader != null) {
-//            mReader.free();
-//        }
+
         super.onDestroy();
     }
 

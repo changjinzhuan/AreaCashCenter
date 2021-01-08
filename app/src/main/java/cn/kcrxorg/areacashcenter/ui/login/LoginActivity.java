@@ -32,6 +32,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import cn.kcrxorg.areacashcenter.MainActivity;
 import cn.kcrxorg.areacashcenter.MyApp;
+import cn.kcrxorg.areacashcenter.NewSettingActivity;
 import cn.kcrxorg.areacashcenter.R;
 import cn.kcrxorg.areacashcenter.SettingActivity;
 import cn.kcrxorg.areacashcenter.data.model.msg.HttpLogin;
@@ -78,7 +79,7 @@ public class LoginActivity extends AppCompatActivity {
         tv_serverset.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent settingintent = new Intent(LoginActivity.this, SettingActivity.class);
+                Intent settingintent = new Intent(LoginActivity.this, NewSettingActivity.class);
                 startActivity(settingintent);
             }
         });

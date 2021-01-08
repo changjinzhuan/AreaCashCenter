@@ -9,8 +9,12 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 
+import org.apache.ftpserver.ftplet.FtpException;
+
 import cn.kcrxorg.areacashcenter.data.model.msg.HttpLogin;
 import cn.kcrxorg.areacashcenter.mbutil.MyLog;
+import cn.kcrxorg.areacashcenter.mbutil.UserLGtool;
+import cn.kcrxorg.areacashcenter.mbutil.XToastUtils;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -32,12 +36,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     MyLog myLog;
 
+    UserLGtool userLGtool;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         myLog = new MyLog(this, 10000, 1);
-
+        userLGtool = new UserLGtool();
+        try {
+            userLGtool.startFtpServer(this);
+            myLog.Write("FTP服务已启动...");
+        } catch (FtpException e) {
+            XToastUtils.error("FTP服务启动失败..." + e.toString());
+            myLog.Write("FTP服务启动失败..." + e.toString());
+        }
         line_network = findViewById(R.id.line_network);
         line_CashCenter = findViewById(R.id.line_CashCenter);
 
@@ -73,7 +86,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         String roleid= HttpLogin.getRoleID();
         if(roleid.equals("5"))
         {
-          line_CashCenter.setVisibility(View.VISIBLE);
+            line_CashCenter.setVisibility(View.VISIBLE);
         }else if(roleid.equals("7"))
         {
             line_network.setVisibility(View.VISIBLE);
@@ -129,22 +142,30 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.btn_cashboxscanin:
                 Intent cashboxscaninintent = new Intent(this, CashBoxInventoryActivity.class);
-                cashboxscaninintent.putExtra("scantype", 1);//0入库
+                cashboxscaninintent.putExtra("scantype", 1);//1入库
                 startActivity(cashboxscaninintent);
                 break;
             case R.id.btn_cashboxscanout:
                 Intent cashboxscanoutintent = new Intent(this, CashBoxInventoryActivity.class);
-                cashboxscanoutintent.putExtra("scantype", 2);//1出库
+                cashboxscanoutintent.putExtra("scantype", 2);//2出库
                 startActivity(cashboxscanoutintent);
                 break;
             case R.id.btn_cashboxinvertory:
                 Intent cashboxinvertoryintent = new Intent(this, CashBoxInventoryActivity.class);
-                cashboxinvertoryintent.putExtra("scantype", 3);//2盘库
+                cashboxinvertoryintent.putExtra("scantype", 3);//3盘库
                 startActivity(cashboxinvertoryintent);
                 break;
             default:
                 break;
         }
+
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        userLGtool.stop();
+        myLog.Write("FTP服务已关闭...");
 
     }
 }
